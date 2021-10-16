@@ -1,0 +1,19 @@
+import { client } from "..";
+import { SlashCommand as Command } from "../interfaces/Command";
+import { I, D } from "../aliases/discord.js.js";
+import { MessageActionRow, MessageButton } from "discord.js";
+import mkembed from "../function/mkembed";
+
+/** 예시 명령어 */
+export default class ExampleCommand implements Command {
+  /** 해당 명령어 설명 */
+  metadata = <D>{
+    name: 'example',
+    description: 'example'
+  };
+
+  /** 실행되는 부분 */
+  async run(interaction: I) {
+    await interaction.editReply({ content: '예시 명령어' });
+  }
+}

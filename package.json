@@ -1,0 +1,37 @@
+{
+  "name": "embot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node .",
+    "build": "ts-cleaner && tsc",
+    "dev:watch": "nodemon -e ts --exec 'ts-cleaner && tsc && node . || exit 1'",
+    "dev": "ts-cleaner && tsc && node ."
+  },
+  "author": "tkrmagid",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^16.11.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.1",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "nodemon": "^2.0.13",
+    "ts-cleaner": "^1.0.5",
+    "ts-node": "^10.3.0",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "discord.js": "^13.2.0",
+    "dotenv": "^10.0.0",
+    "path": "^0.12.7"
+  },
+  "engines": {
+    "node": "^16.10.0"
+  }
+}
