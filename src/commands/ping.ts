@@ -3,6 +3,12 @@ import { SlashCommand as Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
 import mkembed from "../function/mkembed";
+import MDB from "../database/Mongodb";
+
+/**
+ * DB
+ * let guildDB = await MDB.get.guild(interaction);
+ */
 
 /** 핑 명령어 */
 export default class PingCommand implements Command {

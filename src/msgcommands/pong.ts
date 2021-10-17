@@ -1,8 +1,14 @@
 import { client } from "..";
 import { MsgCommand as Command } from "../interfaces/Command";
-import { I, D, M } from "../aliases/discord.js.js";
+import { I, D, M } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
 import mkembed from "../function/mkembed";
+import MDB from "../database/Mongodb";
+
+/**
+ * DB
+ * let guildDB = await MDB.get.guild(interaction);
+ */
 
 /** 퐁 명령어 */
 export default class PongCommand implements Command {

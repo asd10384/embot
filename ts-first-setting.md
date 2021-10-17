@@ -11,3 +11,12 @@
 
   * ncu -u
   * npm install
+
+## @discordjs/voice 와 함께 설치해야하는 모듈
+  * npm i @discordjs/voice --save
+  * npm i sodium --ignore-scripts --save
+  * npm i prism-media --save
+  * npm i @discordjs/opus --save
+  * npm i opusscript --save
+  * npm i libsodium-wrappers --save
+  * npm i tweetnacl --save

@@ -3,6 +3,9 @@ import { readdirSync } from 'fs';
 import { client } from '..';
 import _ from '../consts';
 import { MsgCommand as Command } from '../interfaces/Command';
+import MDB from "../database/Mongodb";
+import { ttsplay } from "../tts/tts";
+
 export default class MsgHandler {
   public commands: Collection<string, Command>;
 
@@ -30,20 +33,30 @@ export default class MsgHandler {
         if (!command) return err(message, commandName);
         command.run(message, args);
       } catch(error) {
+        if (client.debug) console.log(error); // 오류확인
         err(message, commandName);
       } finally {
         client.msgdelete(message, 0);
       }
-    }
-    function err(message: Message, commandName: string | undefined | null) {
-      if (!commandName || commandName == '') return;
-      let errembed = new MessageEmbed()
-        .setColor('DARK_RED')
-        .setDescription(`\` ${commandName} \` 이라는 명령어를 찾을수 없습니다.`)
-        .setFooter(` ${client.prefix}help 를 입력해 명령어를 확인해주세요.`);
-      return message.channel.send({
-        embeds: [ errembed ]
-      }).then(m => client.msgdelete(m, 1));
+    } else {
+      MDB.get.guild(message).then((guildID) => {
+        if (guildID!.tts.channelID === message.channelId) {
+          if (guildID!.tts.use) {
+            ttsplay(message, message.content);
+          }
+        }
+      })
     }
   }
+}
+
+function err(message: Message, commandName: string | undefined | null) {
+  if (!commandName || commandName == '') return;
+  let errembed = new MessageEmbed()
+    .setColor('DARK_RED')
+    .setDescription(`\` ${commandName} \` 이라는 명령어를 찾을수 없습니다.`)
+    .setFooter(` ${client.prefix}help 를 입력해 명령어를 확인해주세요.`);
+  return message.channel.send({
+    embeds: [ errembed ]
+  }).then(m => client.msgdelete(m, 1));
 }

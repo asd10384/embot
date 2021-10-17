@@ -1,8 +1,14 @@
 import { client, msg, slash } from "..";
 import { SlashCommand as Command } from "../interfaces/Command";
-import { I, D } from "../aliases/discord.js.js";
+import { I, D } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
 import mkembed from "../function/mkembed";
+import MDB from "../database/Mongodb";
+
+/**
+ * DB
+ * let guildDB = await MDB.get.guild(interaction);
+ */
 
 /** help 명령어 */
 export default class HelpCommand implements Command {
@@ -53,6 +59,7 @@ export default class HelpCommand implements Command {
       color: 'ORANGE'
     });
     slash.commands.forEach((cmd) => {
+      if (cmd.metadata.name === this.metadata.name) return;
       slashcmdembed.addField(`**/${cmd.metadata.name}**`, `${cmd.metadata.description}`, true);
     });
     msg.commands.forEach((cmd) => {

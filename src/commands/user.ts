@@ -1,9 +1,15 @@
 import { client } from "..";
 import { SlashCommand as Command } from "../interfaces/Command";
-import { I, D } from "../aliases/discord.js.js";
+import { I, D } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
 import mkembed from "../function/mkembed";
+import MDB from "../database/Mongodb";
 import format_date from "../function/format";
+
+/**
+ * DB
+ * let guildDB = await MDB.get.guild(interaction);
+ */
 
 /** 유저 명령어 */
 export default class UserCommand implements Command {
