@@ -1,6 +1,6 @@
 # ENBOT [discord bot]
 
-**[이미지 추가 예정]**  
+**[Image to be added / 이미지 추가 예정]**  
 
 
 ## Information / 정보
