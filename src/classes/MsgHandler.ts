@@ -45,7 +45,7 @@ export default class MsgHandler {
             ttsplay(message, message.content);
           }
         }
-      })
+      });
     }
   }
 }
