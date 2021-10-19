@@ -1,4 +1,5 @@
 import { client } from "..";
+import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { MsgCommand as Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
@@ -10,6 +11,9 @@ import { signature_obj } from "../tts/signature";
 /**
  * DB
  * let guildDB = await MDB.get.guild(interaction);
+ * 
+ * check permission(role)
+ * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 /** TTS 명령어 */
@@ -24,6 +28,7 @@ export default class TtsCommand implements Command {
   /** 실행되는 부분 */
   async run(message: M, args: string[]) {
     if (args[0] === '채널생성') {
+      if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
       let guildDB = await MDB.get.guild(message);
       const channel = await message.guild?.channels.create('TTS채널', {
         type: 'GUILD_TEXT',

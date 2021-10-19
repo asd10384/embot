@@ -1,4 +1,5 @@
 import { client } from "..";
+import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { SlashCommand as Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js.js";
 import { MessageActionRow, MessageButton } from "discord.js";
@@ -9,6 +10,9 @@ import { ChannelTypes } from "discord.js/typings/enums";
 /**
  * DB
  * let guildDB = await MDB.get.guild(interaction);
+ * 
+ * check permission(role)
+ * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
  */
 
 /** 자동음성채널 명령어 */
@@ -45,6 +49,7 @@ export default class ExampleCommand implements Command {
 
   /** 실행되는 부분 */
   async run(interaction: I) {
+    if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
     const cmd = interaction.options.getSubcommand();
     const channel = interaction.options.getChannel('채널');
     let guildDB = await MDB.get.guild(interaction);

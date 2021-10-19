@@ -1,4 +1,5 @@
 import { client } from "..";
+import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { SlashCommand as Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
@@ -11,6 +12,9 @@ import { ChannelTypes } from "discord.js/typings/enums";
 /**
  * DB
  * let guildDB = await MDB.get.guild(interaction);
+ * 
+ * check permission(role)
+ * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
  */
 
 /** TTS 명령어 */
@@ -61,6 +65,7 @@ export default class TtsCommand implements Command {
     const cmd = interaction.options.getSubcommand();
     const join_channel = interaction.options.getChannel('join_channel');
     if (cmd === '채널생성') {
+      if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
       let guildDB = await MDB.get.guild(interaction);
       const channel = await interaction.guild?.channels.create('TTS채널', {
         type: 'GUILD_TEXT',

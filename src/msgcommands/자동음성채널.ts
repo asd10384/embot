@@ -1,4 +1,5 @@
 import { client } from "..";
+import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { MsgCommand as Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
 import { GuildChannel, MessageActionRow, MessageButton, ThreadChannel, VoiceChannel } from "discord.js";
@@ -7,8 +8,10 @@ import MDB from "../database/Mongodb";
 
 /**
  * DB
- * import MDB from "../database/Mongodb";
  * let guildDB = await MDB.get.guild(interaction);
+ * 
+ * check permission(role)
+ * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 /** 자동음성채널 명령어 */
@@ -22,6 +25,7 @@ export default class 자동음성채널Command implements Command {
 
   /** 실행되는 부분 */
   async run(message: M, args: string[]) {
+    if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
     let guildDB = await MDB.get.guild(message);
     let channel: GuildChannel | ThreadChannel | undefined;
     if (args[1]) {

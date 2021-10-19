@@ -1,4 +1,5 @@
 import { client } from "..";
+import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { SlashCommand as Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
@@ -9,6 +10,9 @@ import format_date from "../function/format";
 /**
  * DB
  * let guildDB = await MDB.get.guild(interaction);
+ * 
+ * check permission(role)
+ * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
  */
 
 /** 유저 명령어 */

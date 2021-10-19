@@ -1,4 +1,5 @@
 import { client, msg, slash } from "..";
+import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { MsgCommand as Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
@@ -8,6 +9,9 @@ import MDB from "../database/Mongodb";
 /**
  * DB
  * let guildDB = await MDB.get.guild(interaction);
+ * 
+ * check permission(role)
+ * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 /** help 명령어 */
@@ -42,6 +46,7 @@ export default class HelpCommand implements Command {
       return message.channel.send({ embeds: [ embed ] }).then(m => client.msgdelete(m, 2.5));
     }
     let slashcmdembed = mkembed({
+      author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
       title: `\` slash (/) \` 명령어`,
       description: `명령어\n명령어 설명`,
       color: 'ORANGE'
@@ -58,6 +63,7 @@ export default class HelpCommand implements Command {
     msg.commands.forEach((cmd) => {
       msgcmdembed.addField(`**${client.prefix}${cmd.metadata.name} [${(cmd.metadata.aliases) ? cmd.metadata.aliases : ''}]**`, `${cmd.metadata.description}`, true);
     });
+    if (message.member && message.member.user) return message.member.user.send({ embeds: [ slashcmdembed, msgcmdembed ] });
     return message.channel.send({ embeds: [ slashcmdembed, msgcmdembed ] }).then(m => client.msgdelete(m, 3));
   }
 }
