@@ -143,22 +143,40 @@ export default class 자동음성채널Command implements Command {
     }
     if (args[0] === '제거') {
       if (channel) {
+        let same: boolean = false;
         let list: { channelID: string, categoryID: string, limit: number }[] = [];
         guildDB!.autovc.first.forEach((obj) => {
-          if (channel!.id !== obj.channelID) list.push(obj);
+          if (channel!.id !== obj.channelID) {
+            list.push(obj);
+          } else {
+            same = true;
+          }
         });
-        guildDB!.autovc.first = list;
-        guildDB!.save().catch((err) => console.error(err));
-        return message.channel.send({
-          embeds: [
-            mkembed({
-              title: `\` 자동음성채널 제거 \``,
-              description: `<#${channel!.id}> 제거 완료`,
-              footer: { text: `목록: ${client.prefix}자동음성채널 목록` },
-              color: 'ORANGE'
-            })
-          ]
-        }).then(m => client.msgdelete(m, 2));
+        if (same) {
+          guildDB!.autovc.first = list;
+          guildDB!.save().catch((err) => console.error(err));
+          return message.channel.send({
+            embeds: [
+              mkembed({
+                title: `\` 자동음성채널 제거 \``,
+                description: `<#${channel!.id}> 제거 완료`,
+                footer: { text: `목록: ${client.prefix}자동음성채널 목록` },
+                color: 'ORANGE'
+              })
+            ]
+          }).then(m => client.msgdelete(m, 2));
+        } else {
+          return message.channel.send({
+            embeds: [
+              mkembed({
+                title: `\` 자동음성채널 제거 오류 \``,
+                description: `<#${channel!.id}> 채널이 등록되어있지 않습니다.`,
+                footer: { text: `목록: ${client.prefix}자동음성채널 목록` },
+                color: 'DARK_RED'
+              })
+            ]
+          }).then(m => client.msgdelete(m, 1));
+        }
       }
       return message.channel.send({
         embeds: [

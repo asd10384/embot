@@ -71,22 +71,40 @@ export default class ExampleCommand implements Command {
       });
     }
     if (cmd === '제거') {
+      let same: boolean = false;
       let list: { channelID: string, categoryID: string, limit: number }[] = [];
       guildDB!.autovc.first.forEach((obj) => {
-        if (channel!.id !== obj.channelID) list.push(obj);
+        if (channel!.id !== obj.channelID) {
+          list.push(obj);
+        } else {
+          same = true;
+        }
       });
-      guildDB!.autovc.first = list;
-      guildDB!.save().catch((err) => console.error(err));
-      await interaction.editReply({
-        embeds: [
-          mkembed({
-            title: `\` 자동음성채널 제거 \``,
-            description: `<#${channel!.id}> 제거 완료`,
-            footer: { text: `목록: ${client.prefix}자동음성채널 목록` },
-            color: 'ORANGE'
-          })
-        ]
-      });
+      if (same) {
+        guildDB!.autovc.first = list;
+        guildDB!.save().catch((err) => console.error(err));
+        await interaction.editReply({
+          embeds: [
+            mkembed({
+              title: `\` 자동음성채널 제거 \``,
+              description: `<#${channel!.id}> 제거 완료`,
+              footer: { text: `목록: /자동음성채널 목록` },
+              color: 'ORANGE'
+            })
+          ]
+        });
+      } else {
+        await interaction.editReply({
+          embeds: [
+            mkembed({
+              title: `\` 자동음성채널 제거 오류 \``,
+              description: `<#${channel!.id}> 채널이 등록되어있지 않습니다.`,
+              footer: { text: `목록: /자동음성채널 목록` },
+              color: 'DARK_RED'
+            })
+          ]
+        });
+      }
     }
   }
 }
