@@ -22,6 +22,15 @@ export default class ExampleCommand implements Command {
 
   /** 실행되는 부분 */
   async run(message: M, args: string[]) {
-    message.channel.send({ content: '예시 명령어' }).then(m => client.msgdelete(m, 0.5));
+    return message.channel.send({
+      embeds: [
+        mkembed({
+          title: ``,
+          description: ``,
+          footer: { text: `` },
+          color: 'ORANGE'
+        })
+      ]
+    }).then(m => client.msgdelete(m, 1));
   }
 }
