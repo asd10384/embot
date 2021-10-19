@@ -1,4 +1,4 @@
-# EBOT [discord bot]
+# EMBOT [discord bot]
 
 **[Image to be added / 이미지 추가 예정]**  
 
