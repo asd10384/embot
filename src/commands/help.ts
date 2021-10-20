@@ -30,7 +30,7 @@ export default class HelpCommand implements Command {
 
   /** 실행되는 부분 */
   async run(interaction: I) {
-    const commandName = interaction.options.getString('명령어');
+    const commandName = interaction.options.getString('명령어', false);
     if (commandName) {
       const slashcommand = slash.commands.get(commandName);
       const msgcommand = msg.commands.get(commandName);

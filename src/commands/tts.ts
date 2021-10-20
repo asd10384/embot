@@ -61,9 +61,9 @@ export default class TtsCommand implements Command {
 
   /** 실행되는 부분 */
   async run(interaction: I) {
-    const cmdgrp = interaction.options.getSubcommandGroup();
-    const cmd = interaction.options.getSubcommand();
-    const join_channel = interaction.options.getChannel('join_channel');
+    const cmdgrp = interaction.options.getSubcommandGroup(false);
+    const cmd = interaction.options.getSubcommand(false);
+    const join_channel = interaction.options.getChannel('join_channel', false);
     if (cmd === '채널생성') {
       if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
       let guildDB = await MDB.get.guild(interaction);

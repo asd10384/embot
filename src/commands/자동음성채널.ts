@@ -50,8 +50,8 @@ export default class ExampleCommand implements Command {
   /** 실행되는 부분 */
   async run(interaction: I) {
     if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
-    const cmd = interaction.options.getSubcommand();
-    const channel = interaction.options.getChannel('채널');
+    const cmd = interaction.options.getSubcommand(false);
+    const channel = interaction.options.getChannel('채널', false);
     let guildDB = await MDB.get.guild(interaction);
     if (cmd === '목록') {
       const embed = mkembed({
