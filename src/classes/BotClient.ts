@@ -17,6 +17,8 @@ export default class BotClient extends Client {
   msgdelete: (m: Message, deletetime: number) => void;
   deletetime: number;
   ttsfilepath: string;
+  ttstimer: Map<string, { start: boolean, time: number }>;
+  ttstimertime: number;
   /**
    * 클라이언트 생성
    * 
@@ -32,7 +34,7 @@ export default class BotClient extends Client {
     this.token = process.env.DISCORD_TOKEN!;
     this.prefix = process.env.PREFIX || 'm;';
     this.login();
-    this.deletetime = 6000;
+    this.deletetime = 6000; //초
     this.ttsfilepath = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
     this.msgdelete = (message: Message, time: number) => {
       let dtime = this.deletetime * time;
@@ -43,6 +45,8 @@ export default class BotClient extends Client {
         } catch(err) {}
       }, dtime);
     };
+    this.ttstimer = new Map<string, { start: boolean, time: number }>();
+    this.ttstimertime = (60) * 45; //분
   }
 
   /**

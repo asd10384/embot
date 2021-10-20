@@ -8,6 +8,7 @@ import { createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel, cr
 import { signature_check_obj } from "./signature";
 import replacemsg from "./replacemsg";
 import googlettsapi from "../tts/googlettsapi";
+import { set_timer } from "./timer";
 
 config();
 const ttsfilemaxlength: number = 8;
@@ -69,10 +70,11 @@ async function fttsfplay(message: M, text: string) {
   const file = await mktts(filename, text);
   if (!file) return;
   const vca = message.guild?.voiceAdapterCreator!;
+  set_timer(message.guildId!, true);
   fplay(vca, message.guildId!, channel.id, file);
 }
 
-async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string) {
+async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, options?: { volume?: number }) {
   let connection: VoiceConnection;
   let getconnection = getVoiceConnection(guildID);
   if (getconnection) {
@@ -85,13 +87,14 @@ async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID:
     });
   }
   const Player = createAudioPlayer();
-  connection.subscribe(Player);
+  const subscription = connection.subscribe(Player);
 
   const resource = createAudioResource(fileURL, {
     inlineVolume: true
   });
-  resource.volume?.setVolume(1);
+  resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
   Player.play(resource);
+  return subscription;
 }
 
 async function getchannel(message: M) {
