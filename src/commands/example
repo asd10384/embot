@@ -27,9 +27,9 @@ export default class ExampleCommand implements Command {
     await interaction.editReply({
       embeds: [
         mkembed({
-          title: ``,
-          description: ``,
-          footer: { text: `` },
+          title: `example`,
+          description: `example`,
+          footer: { text: `example` },
           color: 'ORANGE'
         })
       ]
