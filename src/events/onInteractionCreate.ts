@@ -1,7 +1,12 @@
 import { slash } from '..';
 import { Interaction } from 'discord.js';
+import runSMInteraction from '../function/SelectMenuInteraction';
 
 export default async function onInteractionCreate (interaction: Interaction) {
+  if (interaction.isSelectMenu()) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+    runSMInteraction(interaction);
+  }
   if (!interaction.isCommand()) return;
 
   /**

@@ -2,7 +2,7 @@ import { client, msg, slash } from "..";
 import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { SlashCommand as Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js";
-import { MessageActionRow, MessageButton } from "discord.js";
+import { MessageActionRow, MessageButton, MessageSelectMenu } from "discord.js";
 import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
 
@@ -19,56 +19,44 @@ export default class HelpCommand implements Command {
   /** 해당 명령어 설명 */
   metadata = <D>{
     name: 'help',
-    description: '명령어 확인',
-    options: [{
-      type: 'STRING',
-      name: '명령어',
-      description: '명령어 이름을 입력해 자세한 정보 확인',
-      required: false
-    }]
+    description: '명령어 확인'
   };
 
   /** 실행되는 부분 */
   async run(interaction: I) {
-    const commandName = interaction.options.getString('명령어', false);
-    if (commandName) {
-      const slashcommand = slash.commands.get(commandName);
-      const msgcommand = msg.commands.get(commandName);
-      let embed = mkembed({ color: 'ORANGE' });
-      if (slashcommand) {
-        embed.setTitle(`\` /${commandName} \` 명령어`)
-          .setDescription(`이름: ${commandName}\n설명: ${slashcommand.metadata.description}`)
-          .setFooter(`도움말: /help`);
-      } else if (msgcommand) {
-        embed.setTitle(`\` ${client.prefix}${commandName} \` 명령어`)
-          .setDescription(`이름: ${commandName}\nAND: ${(msgcommand.metadata.aliases) ? msgcommand.metadata.aliases : ''}\n설명: ${msgcommand.metadata.description}`)
-          .setFooter(`PREFIX: ${client.prefix}`);
-      } else {
-        embed.setTitle(`\` ${commandName} \` 명령어`)
-          .setDescription(`명령어를 찾을수 없습니다.`)
-          .setFooter(`도움말: /help`)
-          .setColor('DARK_RED');
-      }
-      return await interaction.editReply({ embeds: [ embed ] });
-    }
-    let slashcmdembed = mkembed({
+    const slashcmdembed = mkembed({
       title: `\` slash (/) \` 명령어`,
       description: `명령어\n명령어 설명`,
       color: 'ORANGE'
     });
-    let msgcmdembed = mkembed({
+    const msgcmdembed = mkembed({
       title: `\` 기본 (${client.prefix}) \` 명령어`,
       description: `명령어 [같은 명령어]\n명령어 설명`,
       footer: { text: `PREFIX: ${client.prefix}` },
       color: 'ORANGE'
     });
+    let cmdlist: { label: string, description: string, value: string }[] = [];
     slash.commands.forEach((cmd) => {
       if (cmd.metadata.name === this.metadata.name) return;
+      cmdlist.push({ label: `/${cmd.metadata.name}`, description: `${cmd.metadata.description}`, value: `${cmd.metadata.name}` });
       slashcmdembed.addField(`**/${cmd.metadata.name}**`, `${cmd.metadata.description}`, true);
     });
     msg.commands.forEach((cmd) => {
+      // cmdlist.push({ label: `${client.prefix}${cmd.metadata.name} [${(cmd.metadata.aliases) ? cmd.metadata.aliases : ''}]`, description: `${cmd.metadata.description}`, value: `${cmd.metadata.name}` });
       msgcmdembed.addField(`**${client.prefix}${cmd.metadata.name} [${(cmd.metadata.aliases) ? cmd.metadata.aliases : ''}]**`, `${cmd.metadata.description}`, true);
     });
-    await interaction.editReply({ embeds: [ slashcmdembed, msgcmdembed ] });
+    const rowhelp = mkembed({
+      title: '\` 명령어 상세보기 \`',
+      description: `명령어의 자세한 내용은\n아래의 선택박스에서 선택해\n확인할수있습니다.`,
+      footer: { text: '여러번 가능' },
+      color: 'ORANGE'
+    });
+    const row = new MessageActionRow().addComponents(
+      new MessageSelectMenu()
+        .setCustomId('help')
+        .setPlaceholder('명령어를 선택해주세요.')
+        .addOptions(cmdlist)
+    );
+    await interaction.editReply({ embeds: [ slashcmdembed, msgcmdembed, rowhelp ], components: [ row ] });
   }
 }
