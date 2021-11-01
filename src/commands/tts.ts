@@ -8,6 +8,7 @@ import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
 import { signature_obj } from "../tts/signature";
 import { ChannelTypes } from "discord.js/typings/enums";
+import nowdate from "../function/nowdate";
 
 /**
  * DB
@@ -54,6 +55,28 @@ export default class TtsCommand implements Command {
           type: 'SUB_COMMAND',
           name: '목록',
           description: '시그니쳐 확인'
+        }]
+      },
+      {
+        type: 'SUB_COMMAND',
+        name: 'ban',
+        description: '유저 ban',
+        options: [{
+          type: 'USER',
+          name: '유저',
+          description: '유저',
+          required: true
+        }]
+      },
+      {
+        type: 'SUB_COMMAND',
+        name: 'unban',
+        description: '유저 unban',
+        options: [{
+          type: 'USER',
+          name: '유저',
+          description: '유저',
+          required: true
         }]
       }
     ]
@@ -114,6 +137,99 @@ export default class TtsCommand implements Command {
           embed.addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
         });
         return await interaction.editReply({ embeds: [ embed, embed2 ] });
+      }
+    }
+    if (cmd === 'ban' || cmd === 'unban') {
+      if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
+      const user = interaction.options.getUser('유저', true);
+      const member = interaction.guild?.members.cache.get(user.id);
+      if (member) {
+        let userDB = await MDB.get.user(member);
+        if (userDB) {
+          if (userDB.tts.istts) {
+            if (cmd === 'unban') return await interaction.editReply({
+              embeds: [
+                mkembed({
+                  title: `\` TTS 오류 \``,
+                  description: `\` ${(member.nickname) ? member.nickname : user.username} \` 님은 이미 unban 상태입니다.`,
+                  color: 'DARK_RED'
+                })
+              ]
+            });
+            userDB.tts.istts = false;
+            userDB.tts.time = -1;
+            userDB.tts.banforid = interaction.member.user.id;
+            userDB.tts.date = nowdate();
+            userDB.save().catch((err) => console.error(err));
+            interaction.guild?.members.cache.get(userDB.id)?.user.send({
+              embeds: [
+                mkembed({
+                  author: { name: interaction.guild?.name!, iconURL: interaction.guild?.iconURL()! },
+                  title: `\` TTS ban \``,
+                  description: `
+                    \` 당신은 TTS ban 되었습니다. \`
+
+                    이제 TTS 를 사용할수 없습니다.
+
+                    ban한사람 : <@${interaction.member.user.id}>
+                    ban된시간 : ${nowdate()}
+                  `,
+                  color: 'RED'
+                })
+              ]
+            });
+            return await interaction.editReply({
+              embeds: [
+                mkembed({
+                  title: `\` TTS ban \``,
+                  description: `\` ${(member.nickname) ? member.nickname : user.username} \` 님을 ban 했습니다.\n시간 : 무기한`,
+                  color: 'ORANGE'
+                })
+              ]
+            });
+          } else {
+            if (cmd === 'ban') return await interaction.editReply({
+              embeds: [
+                mkembed({
+                  title: `\` TTS 오류 \``,
+                  description: `\` ${(member.nickname) ? member.nickname : user.username} \` 님은 이미 ban 상태입니다.`,
+                  color: 'DARK_RED'
+                })
+              ]
+            });
+            userDB.tts.istts = true;
+            userDB.tts.time = 0;
+            userDB.tts.banforid = '';
+            userDB.tts.date = '';
+            userDB.save().catch((err) => console.error(err));
+            interaction.guild?.members.cache.get(userDB.id)?.user.send({
+              embeds: [
+                mkembed({
+                  author: { name: interaction.guild?.name!, iconURL: interaction.guild?.iconURL()! },
+                  title: `\` TTS unban \``,
+                  description: `
+                    \` 당신은 TTS unban 되었습니다. \`
+
+                    이제 TTS 를 사용할수 있습니다.
+                    
+                    unban한사람 : <@${interaction.member.user.id}>
+                    unban된시간 : ${nowdate()}
+                  `,
+                  color: 'RED'
+                })
+              ]
+            });
+            return await interaction.editReply({
+              embeds: [
+                mkembed({
+                  title: `\` TTS unban \``,
+                  description: `\` ${(member.nickname) ? member.nickname : user.username} \` 님을 unban 했습니다.`,
+                  color: 'ORANGE'
+                })
+              ]
+            });
+          }
+        }
       }
     }
   }

@@ -14,7 +14,7 @@ config(); // .env 불러오기
 export default class BotClient extends Client {
   debug: boolean;
   prefix: string;
-  msgdelete: (m: Message, deletetime: number) => void;
+  msgdelete: (m: Message, deletetime: number, customtime?: boolean) => void;
   deletetime: number;
   ttsfilepath: string;
   ttstimer: Map<string, { start: boolean, time: number }>;
@@ -36,8 +36,8 @@ export default class BotClient extends Client {
     this.login();
     this.deletetime = 6000; //초
     this.ttsfilepath = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
-    this.msgdelete = (message: Message, time: number) => {
-      let dtime = this.deletetime * time;
+    this.msgdelete = (message: Message, time: number, customtime?: boolean) => {
+      let dtime = (customtime) ? time : this.deletetime * time;
       if (dtime < 100) dtime = 100;
       setTimeout(() => {
         try {

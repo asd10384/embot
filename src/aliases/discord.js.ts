@@ -1,1 +1,1 @@
-export { CommandInteraction as I, ChatInputApplicationCommandData as D, Message as M } from 'discord.js';
+export { CommandInteraction as I, ChatInputApplicationCommandData as D, Message as M, GuildMember as MEM } from 'discord.js';
