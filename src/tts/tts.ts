@@ -9,6 +9,7 @@ import { signature_check_obj } from "./signature";
 import replacemsg from "./replacemsg";
 import googlettsapi from "../tts/googlettsapi";
 import { set_timer } from "./timer";
+import MDB from "../database/Mongodb";
 
 config();
 const ttsfilemaxlength: number = 8;
@@ -56,6 +57,36 @@ const snlist = Object.keys(signature_check_obj);
 const sncheck = new RegExp(Object.keys(signature_check_obj).join('|'), 'gi');
 
 async function fttsfplay(message: M, text: string) {
+  text = text.replace(/<@\!?[(0-9)]{18}>/g, (t) => {
+    const member = message.guild?.members.cache.get(t.replace(/[^0-9]/g,''));
+    return (member) ? (member.nickname) ? member.nickname : (member.user) ? member.user.username : '' : '';
+  });
+  text = text.replace(/\<a?\:.*\:[(0-9)]{18}\>/g, (t) => {
+    return '이모티콘';
+  });
+  if (message.member) {
+    let userDB = await MDB.get.user(message.member);
+    if (userDB && !userDB.tts.istts) {
+      client.msgdelete(message, 50, true);
+      return message.member.user.send({
+        embeds: [
+          mkembed({
+            author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
+            title: `\` TTS ban \``,
+            description: `
+              \` 현재 당신은 TTS ban 상태입니다. \`
+              
+              현재 TTS 를 사용할수 없는 상태입니다.
+
+              ban한사람 : <@${userDB.tts.banforid}>
+              ban된시간 : ${userDB.tts.date}
+            `,
+            color: 'DARK_RED'
+          })
+        ]
+      }).then(m => client.msgdelete(m, 2));
+    }
+  }
   const channel = await getchannel(message);
   if (!channel) return message.channel.send({
     embeds: [
@@ -70,15 +101,16 @@ async function fttsfplay(message: M, text: string) {
   const file = await mktts(filename, text);
   if (!file) return;
   const vca = message.guild?.voiceAdapterCreator!;
+  const bvcb = await getbotchannelboolen(message);
   set_timer(message.guildId!, true);
-  fplay(vca, message.guildId!, channel.id, file);
+  fplay(vca, message.guildId!, channel.id, file, bvcb);
 }
 
-async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, options?: { volume?: number }) {
+async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, bvcb: boolean, options?: { volume?: number }) {
   let connection: VoiceConnection;
-  let getconnection = getVoiceConnection(guildID);
-  if (getconnection) {
-    connection = getconnection;
+  const getvoicechannel = getVoiceConnection(guildID);
+  if (bvcb && getvoicechannel) {
+    connection = getvoicechannel;
   } else {
     connection = joinVoiceChannel({
       adapterCreator: voiceAdapterCreator,
@@ -101,6 +133,10 @@ async function getchannel(message: M) {
   if (message.member?.voice.channelId) return message.member.voice.channel;
   if (message.guild?.me?.voice.channelId) return message.guild?.me?.voice.channel;
   return undefined;
+}
+async function getbotchannelboolen(message: M) {
+  if (message.guild?.me?.voice.channelId) return true;
+  return false;
 }
 
 async function mktts(fileURL: string, text: string) {
