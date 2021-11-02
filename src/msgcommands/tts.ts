@@ -7,6 +7,7 @@ import { getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
 import { signature_obj } from "../tts/signature";
+import { check_timer } from "../tts/timer";
 
 /**
  * DB
@@ -98,6 +99,35 @@ export default class TtsCommand implements Command {
           embed.addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
         });
         return message.channel.send({ embeds: [ embed, embed2 ] }).then(m => client.msgdelete(m, 4));
+      }
+    }
+    if (args[0] === 'check') {
+      if (args[1] === 'timer') {
+        const map = check_timer(message.guild!.id);
+        if (map.check) {
+          return message.member?.user.send({
+            embeds: [
+              mkembed({
+                title: `\` TTS \` 타이머`,
+                description: `
+                  **타이머:** ${map.map?.start}
+                  **시간:** ${map.map?.time}
+                `,
+                color: 'ORANGE'
+              })
+            ]
+          }).then(m => client.msgdelete(m, 3));
+        } else {
+          return message.member?.user.send({
+            embeds: [
+              mkembed({
+                title: `\` TTS \` 타이머`,
+                description: `실행되고있지않음`,
+                color: 'ORANGE'
+              })
+            ]
+          }).then(m => client.msgdelete(m, 3));
+        }
       }
     }
     message.channel.send({
