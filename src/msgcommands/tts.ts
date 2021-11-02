@@ -102,16 +102,18 @@ export default class TtsCommand implements Command {
       }
     }
     if (args[0] === 'check') {
+      if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
       if (args[1] === 'timer') {
         const map = check_timer(message.guild!.id);
-        if (map.check) {
+        if (map.check && map.map) {
           return message.member?.user.send({
             embeds: [
               mkembed({
                 title: `\` TTS \` 타이머`,
                 description: `
-                  **타이머:** ${map.map?.start}
-                  **시간:** ${map.map?.time}
+                  **타이머 :** ${map.map.start}
+                  **시간 :** ${map.map.time}
+                  **분초 :** ${Math.floor(map.map.time / 60)}분 ${map.map.time % 60}초
                 `,
                 color: 'ORANGE'
               })
