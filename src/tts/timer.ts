@@ -10,7 +10,9 @@ setInterval(() => {
     if (map.start) {
       map.time = map.time-5;
       if (map.time <= 0) {
-        if (getVoiceConnection(guildID)) {
+        const bvcb = getbotchannelboolen(guildID);
+        const getvoicechannel = getVoiceConnection(guildID);
+        if (bvcb && getvoicechannel) {
           getVoiceConnection(guildID)!.disconnect();
           set_timer(guildID, false);
         } else {
@@ -22,3 +24,8 @@ setInterval(() => {
     }
   });
 }, 5000);
+
+function getbotchannelboolen(guildID: string) {
+  if (client.guilds.cache.get(guildID)?.me?.voice.channelId) return true;
+  return false;
+}
