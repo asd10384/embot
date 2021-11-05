@@ -57,6 +57,13 @@ const snlist = Object.keys(signature_check_obj);
 const sncheck = new RegExp(Object.keys(signature_check_obj).join('|'), 'gi');
 
 async function fttsfplay(message: M, text: string) {
+  text = (/https?\:\/\//g.test(text)) 
+    ? (/https?\:\/\/(www\.)?youtu/g.test(text))
+    ? '유튜브 주소'
+    : (/https?\:\/\/(www\.)?twitch\.tv/g.test(text))
+    ? '트위치 주소'
+    : '주소'
+    : text;
   text = text.replace(/<@\!?[(0-9)]{18}>/g, (t) => {
     const member = message.guild?.members.cache.get(t.replace(/[^0-9]/g,''));
     return (member) ? (member.nickname) ? member.nickname : (member.user) ? member.user.username : '' : '';
