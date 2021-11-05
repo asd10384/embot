@@ -42,6 +42,10 @@ export default class MsgHandler {
       MDB.get.guild(message).then((guildID) => {
         if (guildID!.tts.channelID === message.channelId) {
           if (guildID!.tts.use) {
+            if (
+              message.content.startsWith('http://')
+              || message.content.startsWith('https://')
+            ) return;
             ttsplay(message, message.content);
           }
         }
