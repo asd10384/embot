@@ -62,6 +62,8 @@ async function fttsfplay(message: M, text: string) {
     ? '유튜브 주소'
     : (/https?\:\/\/(www\.)?twitch\.tv/g.test(text))
     ? '트위치 주소'
+    : (/https?\:\/\/(www\.)?(store\.)?steampowered/g.test(text))
+    ? '스팀 주소'
     : '주소'
     : text;
   text = text.replace(/<@\!?[(0-9)]{18}>/g, (t) => {
