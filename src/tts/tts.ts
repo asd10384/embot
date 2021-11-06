@@ -57,13 +57,19 @@ const snlist = Object.keys(signature_check_obj);
 const sncheck = new RegExp(Object.keys(signature_check_obj).join('|'), 'gi');
 
 async function fttsfplay(message: M, text: string) {
-  text = (/https?\:\/\//g.test(text)) 
-    ? (/https?\:\/\/(www\.)?youtu/g.test(text))
+  text = (/https?\:\/\//gi.test(text))
+    ? (/https?\:\/\/(www\.)?youtu/gi.test(text))
     ? '유튜브 주소'
-    : (/https?\:\/\/(www\.)?twitch\.tv/g.test(text))
+    : (/https?\:\/\/(www\.)?twitch\.tv/gi.test(text))
     ? '트위치 주소'
-    : (/https?\:\/\/(www\.)?(store\.)?steampowered/g.test(text))
+    : (/https?\:\/\/(www\.)?(store\.)?steampowered/gi.test(text))
     ? '스팀 주소'
+    : (/https?\:\/\/(www\.)?naver/gi.test(text))
+    ? '네이버 주소'
+    : (/https?\:\/\/(www\.)?namu\.wiki/gi.test(text))
+    ? '나무위키 주소'
+    : (/https?\:\/\/(www\.)?google\.com/gi.test(text))
+    ? '구글 주소'
     : '주소'
     : text;
   text = text.replace(/<@\!?[(0-9)]{18}>/g, (t) => {
