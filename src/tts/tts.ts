@@ -159,7 +159,6 @@ async function mktts(fileURL: string, text: string) {
   let list: any;
   let buf: any;
   let output: any;
-  text = replacemsg(text);
   text = text.replace(sncheck, (text) => {
   return '#*#'+text+'#*#';
   });
@@ -169,6 +168,7 @@ async function mktts(fileURL: string, text: string) {
       if (snlist.includes(list[i])) {
         buf = readFileSync(`sound/signature/${scobj[list[i]]}.mp3`);
       } else {
+        list[i] = replacemsg(list[i]);
         buf = await gettext(list[i]);
       }
       list[i] = buf;
