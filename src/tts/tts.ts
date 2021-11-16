@@ -122,17 +122,11 @@ async function fttsfplay(message: M, text: string) {
 }
 
 async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, bvcb: boolean, options?: { volume?: number }) {
-  let connection: VoiceConnection;
-  const getvoicechannel = getVoiceConnection(guildID);
-  if (bvcb && getvoicechannel) {
-    connection = getvoicechannel;
-  } else {
-    connection = joinVoiceChannel({
-      adapterCreator: voiceAdapterCreator,
-      guildId: guildID,
-      channelId: channelID
-    });
-  }
+  let connection: VoiceConnection = joinVoiceChannel({
+    adapterCreator: voiceAdapterCreator,
+    guildId: guildID,
+    channelId: channelID
+  });
   const Player = createAudioPlayer();
   const subscription = connection.subscribe(Player);
 
