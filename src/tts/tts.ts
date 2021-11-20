@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { client } from "..";
-import { writeFileSync, readFileSync, readdirSync, readdir, unlinkSync } from "fs";
+import { writeFileSync, readFileSync, readdirSync, readdir, unlinkSync, unlink } from "fs";
 import { M } from "../aliases/discord.js";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import mkembed from "../function/mkembed";
@@ -27,7 +27,9 @@ let ttsfilelist: string[] = [];
 readdir(ttsfilepath, (err, files) => {
   if (err) console.error(err);
   files.forEach((file) => {
-    unlinkSync(ttsfilepath+file);
+    unlink(ttsfilepath+file, (err) => {
+      if (err) return;
+    });
   });
 });
 setInterval(() => {
@@ -35,7 +37,9 @@ setInterval(() => {
   if (!files || files.length < ttsfilemaxlength+1) return;
   for (let i=0; i<files.length-ttsfilemaxlength; i++) {
     let filename = ttsfilelist.shift();
-    unlinkSync(ttsfilepath+filename+'.'+fileformat.fileformat);
+    unlink(ttsfilepath+filename+'.'+fileformat.fileformat, (err) => {
+      if (err) return;
+    });
   }
 }, 10000);
 
