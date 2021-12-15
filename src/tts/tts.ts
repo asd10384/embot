@@ -41,7 +41,7 @@ setInterval(() => {
       if (err) return;
     });
   }
-}, 10000);
+}, 1000 * 15);
 
 /**
  * @discordjs/voice 모듈의 추가 모듈 확인 명령어
