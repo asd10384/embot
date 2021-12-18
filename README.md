@@ -31,4 +31,3 @@ npm install --save --force
 ## Built With / 누구랑 만들었나요?
 
 * [tkrmagid](https://github.com/asd10384) - Create all.
-* [kacarong](https://github.com/kacarong) - Create quiz data
