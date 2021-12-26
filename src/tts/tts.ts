@@ -134,12 +134,14 @@ async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID:
   const Player = createAudioPlayer();
   const subscription = connection.subscribe(Player);
 
-  const resource = createAudioResource(fileURL, {
-    inlineVolume: true
-  });
-  resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
-  Player.play(resource);
-  return subscription;
+  try {
+    const resource = createAudioResource(fileURL, {
+      inlineVolume: true
+    });
+    resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
+    Player.play(resource);
+    return subscription;
+  } catch (err) {}
 }
 
 async function getchannel(message: M) {
