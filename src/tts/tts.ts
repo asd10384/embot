@@ -121,7 +121,7 @@ async function fttsfplay(message: M, text: string) {
   const filename = (Math.random() * Number(message.guildId)).toString().replace('.','');
   const file = await mktts(filename, text);
   if (!file) return;
-  const vca = message.guild?.voiceAdapterCreator!;
+  const vca = message.guild?.voiceAdapterCreator! as DiscordGatewayAdapterCreator;
   const bvcb = await getbotchannelboolen(message);
   set_timer(message.guildId!, true);
   fplay(vca, message.guildId!, channel.id, file, bvcb);
@@ -208,7 +208,9 @@ async function gettext(text: string) {
         // sampleRateHertz: 16000, // 헤르츠
         // effectsProfileId: ['medium-bluetooth-speaker-class-device'] // 효과 https://cloud.google.com/text-to-speech/docs/audio-profiles
       },
-    });
+    }).catch((err) => {
+      return null;
+    })
     if (!response) return null;
     return response[0].audioContent;
   } catch(err) {
