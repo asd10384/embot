@@ -3,7 +3,7 @@ import { check_permission as ckper, embed_permission as emper } from "../functio
 import { SlashCommand as Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
-import { getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
+import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
 import { signature_obj } from "../tts/signature";
@@ -115,7 +115,7 @@ export default class TtsCommand implements Command {
       if (join_channel && join_channel.id) {
         let guildID = interaction.guildId!;
         joinVoiceChannel({
-          adapterCreator: interaction.guild?.voiceAdapterCreator!,
+          adapterCreator: interaction.guild?.voiceAdapterCreator! as DiscordGatewayAdapterCreator,
           channelId: join_channel.id,
           guildId: guildID
         });
@@ -158,7 +158,7 @@ export default class TtsCommand implements Command {
             });
             userDB.tts.istts = false;
             userDB.tts.time = -1;
-            userDB.tts.banforid = interaction.member.user.id;
+            userDB.tts.banforid = interaction.member!.user.id;
             userDB.tts.date = nowdate();
             userDB.save().catch((err) => console.error(err));
             interaction.guild?.members.cache.get(userDB.id)?.user.send({
@@ -171,7 +171,7 @@ export default class TtsCommand implements Command {
 
                     이제 TTS 를 사용할수 없습니다.
 
-                    ban한사람 : <@${interaction.member.user.id}>
+                    ban한사람 : <@${interaction.member!.user.id}>
                     ban된시간 : ${nowdate()}
                   `,
                   color: 'RED'
@@ -212,7 +212,7 @@ export default class TtsCommand implements Command {
 
                     이제 TTS 를 사용할수 있습니다.
                     
-                    unban한사람 : <@${interaction.member.user.id}>
+                    unban한사람 : <@${interaction.member!.user.id}>
                     unban된시간 : ${nowdate()}
                   `,
                   color: 'RED'

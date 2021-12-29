@@ -3,7 +3,7 @@ import { check_permission as ckper, embed_permission as emper } from "../functio
 import { MsgCommand as Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js";
 import { MessageActionRow, MessageButton } from "discord.js";
-import { getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
+import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
 import { signature_obj } from "../tts/signature";
@@ -56,7 +56,7 @@ export default class TtsCommand implements Command {
         if (join_channel.isVoice()) {
           let guildID = message.guildId!;
           return joinVoiceChannel({
-            adapterCreator: message.guild?.voiceAdapterCreator!,
+            adapterCreator: message.guild?.voiceAdapterCreator! as DiscordGatewayAdapterCreator,
             channelId: join_channel.id,
             guildId: guildID
           });
