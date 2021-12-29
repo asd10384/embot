@@ -33,14 +33,16 @@ readdir(ttsfilepath, (err, files) => {
   });
 });
 setInterval(() => {
-  const files = readdirSync(ttsfilepath);
-  if (!files || files.length < ttsfilemaxlength+1) return;
-  for (let i=0; i<files.length-ttsfilemaxlength; i++) {
-    let filename = ttsfilelist.shift();
-    unlink(ttsfilepath+filename+'.'+fileformat.fileformat, (err) => {
-      if (err) return;
-    });
-  }
+  try {
+    const files = readdirSync(ttsfilepath);
+    if (!files || files.length < ttsfilemaxlength+1) return;
+    for (let i=0; i<files.length-ttsfilemaxlength; i++) {
+      let filename = ttsfilelist.shift();
+      unlink(ttsfilepath+filename+'.'+fileformat.fileformat, (err) => {
+        if (err) return;
+      });
+    }
+  } catch (err) {}
 }, 1000 * 15);
 
 /**
@@ -183,8 +185,10 @@ async function mktts(fileURL: string, text: string) {
     if (!output) return;
   }
   let filename = `${ttsfilepath}${fileURL}.${fileformat.fileformat}`;
-  writeFileSync(filename, output);
-  ttsfilelist.push(fileURL);
+  try {
+    writeFileSync(filename, output);
+    ttsfilelist.push(fileURL);
+  } catch (err) {}
   return filename;
 }
 
@@ -208,22 +212,7 @@ async function gettext(text: string) {
     if (!response) return null;
     return response[0].audioContent;
   } catch(err) {
-    response = await ttsclient.synthesizeSpeech({
-      input: {text: text},
-      voice: {
-        languageCode: 'ko-KR',
-        name: 'ko-KR-Standard-A'
-      },
-      audioConfig: {
-        audioEncoding: fileformat.ttsformat, // 형식
-        speakingRate: 0.905, // 속도
-        pitch: 0, // 피치
-        // sampleRateHertz: 16000, // 헤르츠
-        // effectsProfileId: ['medium-bluetooth-speaker-class-device'] // 효과 https://cloud.google.com/text-to-speech/docs/audio-profiles
-      },
-    });
-    if (!response) return null;
-    return response[0].audioContent;
+    return null;
   }
 }
 
