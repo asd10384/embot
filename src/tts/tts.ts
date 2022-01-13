@@ -138,7 +138,7 @@ async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID:
     resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
     Player.play(resource);
     setTimeout(() => {
-      unlink(ttsfilepath+filename+fileformat.fileformat, (err) => {
+      unlink(`${ttsfilepath}${filename}.${fileformat.fileformat}`, (err) => {
         ttsfilelist.delete(filename);
         if (err) return;
       });
