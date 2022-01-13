@@ -12,7 +12,6 @@ import { set_timer } from "./timer";
 import MDB from "../database/Mongodb";
 
 config();
-const ttsfilemaxlength: number = 8;
 const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
 
 const fileformat: {
@@ -22,7 +21,7 @@ const fileformat: {
   ttsformat: 'MP3',
   fileformat: 'mp3'
 };
-let ttsfilelist: string[] = [];
+const ttsfilelist: Set<string> = new Set();
 
 readdir(ttsfilepath, (err, files) => {
   if (err) console.error(err);
@@ -32,18 +31,6 @@ readdir(ttsfilepath, (err, files) => {
     });
   });
 });
-setInterval(() => {
-  try {
-    const files = readdirSync(ttsfilepath);
-    if (!files || files.length < ttsfilemaxlength+1) return;
-    for (let i=0; i<files.length-ttsfilemaxlength; i++) {
-      let filename = ttsfilelist.shift();
-      unlink(ttsfilepath+filename+'.'+fileformat.fileformat, (err) => {
-        if (err) return;
-      });
-    }
-  } catch (err) {}
-}, 1000 * 15);
 
 /**
  * @discordjs/voice 모듈의 추가 모듈 확인 명령어
@@ -118,16 +105,24 @@ async function fttsfplay(message: M, text: string) {
       })
     ]
   }).then(m => client.msgdelete(m, 1));
-  const filename = (Math.random() * Number(message.guildId)).toString().replace('.','');
-  const file = await mktts(filename, text);
+  let randomfilename = Math.random().toString(36).replace(/0?\./g,"");
+  while (true) {
+    if (ttsfilelist.has(randomfilename)) {
+      randomfilename = Math.random().toString(36).replace(/0?\./g,"");
+    } else {
+      ttsfilelist.add(randomfilename);
+      break;
+    }
+  }
+  const file = await mktts(randomfilename, text);
   if (!file) return;
   const vca = message.guild?.voiceAdapterCreator! as DiscordGatewayAdapterCreator;
   const bvcb = await getbotchannelboolen(message);
   set_timer(message.guildId!, true);
-  fplay(vca, message.guildId!, channel.id, file, bvcb);
+  fplay(vca, message.guildId!, channel.id, file, bvcb, randomfilename);
 }
 
-async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, bvcb: boolean, options?: { volume?: number }) {
+async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, bvcb: boolean, filename: string, options?: { volume?: number }) {
   let connection: VoiceConnection = joinVoiceChannel({
     adapterCreator: voiceAdapterCreator,
     guildId: guildID,
@@ -142,6 +137,12 @@ async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID:
     });
     resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
     Player.play(resource);
+    setTimeout(() => {
+      unlink(ttsfilepath+filename+fileformat.fileformat, (err) => {
+        ttsfilelist.delete(filename);
+        if (err) return;
+      });
+    }, 1500);
     return subscription;
   } catch (err) {}
 }
@@ -187,7 +188,6 @@ async function mktts(fileURL: string, text: string) {
   let filename = `${ttsfilepath}${fileURL}.${fileformat.fileformat}`;
   try {
     writeFileSync(filename, output);
-    ttsfilelist.push(fileURL);
   } catch (err) {}
   return filename;
 }
