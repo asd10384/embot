@@ -6,7 +6,7 @@ import { MessageActionRow, MessageButton } from "discord.js";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
-import { signature_obj } from "../tts/signature";
+import { getsignature } from "../tts/signature";
 import { ChannelTypes } from "discord.js/typings/enums";
 import nowdate from "../function/nowdate";
 
@@ -133,7 +133,8 @@ export default class TtsCommand implements Command {
           description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`,
           color: 'ORANGE'
         });
-        signature_obj.forEach((obj) => {
+        const sig = await getsignature();
+        sig[0].forEach((obj) => {
           embed.addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
         });
         return await interaction.editReply({ embeds: [ embed, embed2 ] });

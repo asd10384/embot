@@ -5,13 +5,14 @@ import { M } from "../aliases/discord.js";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import mkembed from "../function/mkembed";
 import { createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel, createAudioPlayer, getVoiceConnection, VoiceConnection } from "@discordjs/voice";
-import { signature_check_obj } from "./signature";
+import { getsignature, signaturesiteurl } from "./signature";
 import replacemsg from "./replacemsg";
 import googlettsapi from "../tts/googlettsapi";
 import { set_timer } from "./timer";
 import MDB from "../database/Mongodb";
-
+import axios from "axios";
 config();
+
 const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
 
 const fileformat: {
@@ -46,10 +47,20 @@ const ttsclient = new TextToSpeechClient({
   fallback: false
 });
 
-const snlist = Object.keys(signature_check_obj);
-const sncheck = new RegExp(Object.keys(signature_check_obj).join('|'), 'gi');
+var signature_check_start = false;
+var signature_check_obj: { [key: string]: string } = {};
+var snlist: string[] = [];
+var sncheck = /test/gi;
+
+async function startsignature() {
+  const sig = await getsignature();
+  signature_check_obj = sig[1];
+  snlist = Object.keys(signature_check_obj);
+  sncheck = new RegExp(Object.keys(signature_check_obj).join('|'), 'gi');
+}
 
 async function fttsfplay(message: M, text: string) {
+  if (!signature_check_start) await startsignature();
   text = (/https?\:\/\//gi.test(text))
     ? (/https?\:\/\/(www\.)?youtu/gi.test(text))
     ? '유튜브 주소'
@@ -169,7 +180,10 @@ async function mktts(fileURL: string, text: string) {
   if (list.length > 0) {
     for (let i in list) {
       if (snlist.includes(list[i])) {
-        buf = readFileSync(`sound/signature/${scobj[list[i]]}.mp3`);
+        var encodetext = encodeURI(scobj[list[i]]);
+        console.log(encodetext);
+        var getbuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer" });
+        buf = Buffer.from(getbuf.data);
       } else {
         list[i] = replacemsg(list[i]);
         buf = await gettext(list[i]);

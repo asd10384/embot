@@ -6,7 +6,7 @@ import { MessageActionRow, MessageButton } from "discord.js";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
-import { signature_obj } from "../tts/signature";
+import { getsignature } from "../tts/signature";
 import { check_timer } from "../tts/timer";
 
 /**
@@ -95,7 +95,8 @@ export default class TtsCommand implements Command {
           footer: { text: '이 메세지는 곧 삭제됩니다.' },
           color: 'ORANGE'
         });
-        signature_obj.forEach((obj) => {
+        const sig = await getsignature();
+        sig[0].forEach((obj) => {
           embed.addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
         });
         return message.channel.send({ embeds: [ embed, embed2 ] }).then(m => client.msgdelete(m, 4));
