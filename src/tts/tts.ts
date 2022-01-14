@@ -60,7 +60,10 @@ export async function restartsignature() {
 }
 
 export async function ttsplay(message: M, text: string) {
-  if (!signature_check_start) await restartsignature();
+  if (!signature_check_start) {
+    signature_check_start = true;
+    await restartsignature();
+  }
   text = (/https?\:\/\//gi.test(text))
     ? (/https?\:\/\/(www\.)?youtu/gi.test(text))
     ? '유튜브 주소'
