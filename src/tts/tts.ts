@@ -50,17 +50,17 @@ const ttsclient = new TextToSpeechClient({
 var signature_check_start = false;
 var signature_check_obj: { [key: string]: string } = {};
 var snlist: string[] = [];
-var sncheck = /test/gi;
+var sncheck = /defaultRegExpmessage/gi;
 
-async function startsignature() {
+export async function restartsignature() {
   const sig = await getsignature();
   signature_check_obj = sig[1];
   snlist = Object.keys(signature_check_obj);
   sncheck = new RegExp(Object.keys(signature_check_obj).join('|'), 'gi');
 }
 
-async function fttsfplay(message: M, text: string) {
-  if (!signature_check_start) await startsignature();
+export async function ttsplay(message: M, text: string) {
+  if (!signature_check_start) await restartsignature();
   text = (/https?\:\/\//gi.test(text))
     ? (/https?\:\/\/(www\.)?youtu/gi.test(text))
     ? '유튜브 주소'
@@ -130,10 +130,10 @@ async function fttsfplay(message: M, text: string) {
   const vca = message.guild?.voiceAdapterCreator! as DiscordGatewayAdapterCreator;
   const bvcb = await getbotchannelboolen(message);
   set_timer(message.guildId!, true);
-  fplay(vca, message.guildId!, channel.id, file, bvcb, randomfilename);
+  play(vca, message.guildId!, channel.id, file, bvcb, randomfilename);
 }
 
-async function fplay(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, bvcb: boolean, filename: string, options?: { volume?: number }) {
+export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, bvcb: boolean, filename: string, options?: { volume?: number }) {
   let connection: VoiceConnection = joinVoiceChannel({
     adapterCreator: voiceAdapterCreator,
     guildId: guildID,
@@ -231,6 +231,3 @@ async function gettext(text: string) {
     return null;
   }
 }
-
-export const play = fplay;
-export const ttsplay = fttsfplay;

@@ -8,6 +8,7 @@ import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
 import { getsignature } from "../tts/signature";
 import { check_timer } from "../tts/timer";
+import { restartsignature } from "../tts/tts";
 
 /**
  * DB
@@ -100,6 +101,10 @@ export default class TtsCommand implements Command {
           embed.addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
         });
         return message.channel.send({ embeds: [ embed, embed2 ] }).then(m => client.msgdelete(m, 4));
+      }
+      if (args[1] === "리로드" || args[1] === "reload") {
+        await restartsignature();
+        return message.channel.send({ content: `시그니쳐를 성공적으로 불러왔습니다.` }).then(m => client.msgdelete(m, 1.2));
       }
     }
     if (args[0] === 'check') {

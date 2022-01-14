@@ -9,6 +9,7 @@ import MDB from "../database/Mongodb";
 import { getsignature } from "../tts/signature";
 import { ChannelTypes } from "discord.js/typings/enums";
 import nowdate from "../function/nowdate";
+import { restartsignature } from "../tts/tts";
 
 /**
  * DB
@@ -51,11 +52,18 @@ export default class TtsCommand implements Command {
         type: 'SUB_COMMAND_GROUP',
         name: '시그니쳐',
         description: '시그니쳐 관련',
-        options: [{
-          type: 'SUB_COMMAND',
-          name: '목록',
-          description: '시그니쳐 확인'
-        }]
+        options: [
+          {
+            type: 'SUB_COMMAND',
+            name: '목록',
+            description: '시그니쳐 확인'
+          },
+          {
+            type: "SUB_COMMAND",
+            name: "리로드",
+            description: "시그니쳐 다시 불러오기"
+          }
+        ]
       },
       {
         type: 'SUB_COMMAND',
@@ -138,6 +146,10 @@ export default class TtsCommand implements Command {
           embed.addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
         });
         return await interaction.editReply({ embeds: [ embed, embed2 ] });
+      }
+      if (cmd === "리로드") {
+        await restartsignature();
+        return await interaction.editReply({ content: `시그니쳐를 성공적으로 불러왔습니다.` });
       }
     }
     if (cmd === 'ban' || cmd === 'unban') {
