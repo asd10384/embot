@@ -180,6 +180,7 @@ async function mktts(fileURL: string, text: string) {
   return '#*#'+text+'#*#';
   });
   list = text.split('#*#');
+  var checkerr = false;
   if (list.length > 0) {
     for (let i in list) {
       if (snlist.includes(list[i])) {
@@ -190,8 +191,10 @@ async function mktts(fileURL: string, text: string) {
         list[i] = replacemsg(list[i]);
         buf = await gettext(list[i]);
       }
+      if (!buf) checkerr = true;
       list[i] = buf;
     }
+    if (checkerr) return;
     try {
       output = Buffer.concat(list);
     } catch(err) {
@@ -209,7 +212,7 @@ async function mktts(fileURL: string, text: string) {
 }
 
 async function gettext(text: string) {
-  let response: any;
+  let response: any = undefined;
   try {
     response = await ttsclient.synthesizeSpeech({
       input: {text: text},
@@ -223,13 +226,13 @@ async function gettext(text: string) {
         pitch: 0, // 피치
         // sampleRateHertz: 16000, // 헤르츠
         // effectsProfileId: ['medium-bluetooth-speaker-class-device'] // 효과 https://cloud.google.com/text-to-speech/docs/audio-profiles
-      },
+      }
     }).catch((err) => {
-      return null;
-    })
-    if (!response) return null;
+      return undefined;
+    });
+    if (!response || !response[0] || !response[0].audioContent) return undefined;
     return response[0].audioContent;
   } catch(err) {
-    return null;
+    return undefined;
   }
 }
