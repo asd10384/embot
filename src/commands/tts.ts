@@ -2,7 +2,7 @@ import { client } from "..";
 import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { SlashCommand as Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js";
-import { MessageActionRow, MessageButton } from "discord.js";
+import { MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import mkembed from "../function/mkembed";
 import MDB from "../database/Mongodb";
@@ -132,20 +132,30 @@ export default class TtsCommand implements Command {
     }
     if (cmdgrp === '시그니쳐') {
       if (cmd === '목록') {
-        const embed = mkembed({
-          title: `\` 시그니쳐 확인 \``,
-          footer: { text: '전체 목록' },
-          color: 'ORANGE'
-        });
-        const embed2 = mkembed({
-          description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`,
-          color: 'ORANGE'
-        });
+        let max = 20;
         const sig = await getsignature();
-        sig[0].forEach((obj) => {
-          embed.addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
+        let page = Math.ceil(sig[0].length / 20);
+        let embedlist: MessageEmbed[] = [
+          mkembed({
+            title: `**시그니쳐 목록** [ 1/${page} ]`,
+            description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`,
+            color: 'ORANGE'
+          })
+        ];
+        sig[0].forEach((obj, i) => {
+          if (!embedlist[Math.floor(i / max)]) embedlist[Math.floor(i / max)] = mkembed({
+            title: `**시그니쳐 목록** [ ${Math.floor(i / max) + 1}/${page} ]`,
+            color: 'ORANGE'
+          }) 
+          embedlist[Math.floor(i / max)].addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
         });
-        return await interaction.editReply({ embeds: [ embed, embed2 ] });
+        embedlist.push(
+          mkembed({
+            description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`,
+            color: 'ORANGE'
+          })
+        );
+        return await interaction.editReply({ embeds: embedlist });
       }
       if (cmd === "리로드") {
         await restartsignature();
