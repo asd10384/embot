@@ -19,17 +19,14 @@ export default class Consts {
     'GUILDS',
     'GUILD_MESSAGES',
     'GUILD_MESSAGE_REACTIONS',
-    'GUILD_VOICE_STATES'
+    'GUILD_VOICE_STATES',
+    'GUILD_INTEGRATIONS',
+    'GUILD_MESSAGE_TYPING'
     /* 권한을 이곳에 추가 */
   ];
 
-  /** Slash 명령어 폴더 경로 */
-  public static readonly SLASH_COMMANDS_PATH = join(__dirname, 'commands');
-  /** Slash 명령어 파일 경로 계산 */
-  public static readonly SLASH_COMMAND_PATH = (commandFile: string) => join(this.SLASH_COMMANDS_PATH, commandFile);
-  
-  /** Msg 명령어 폴더 경로 */
-  public static readonly MSG_COMMANDS_PATH = join(__dirname, 'msgcommands');
-  /** Msg 명령어 파일 경로 계산 */
-  public static readonly MSG_COMMAND_PATH = (commandFile: string) => join(this.MSG_COMMANDS_PATH, commandFile);
+  /** 명령어 폴더 경로 */
+  public static readonly COMMANDS_PATH = join(__dirname, 'commands');
+  /** 명령어 파일 경로 계산 */
+  public static readonly COMMAND_PATH = (commandFile: string) => join(this.COMMANDS_PATH, commandFile);
 }

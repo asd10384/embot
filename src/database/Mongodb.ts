@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { I, M, MEM } from "../aliases/discord.js";
 import { connect } from "mongoose";
-import { GuildMember, VoiceState } from "discord.js";
+import { GuildMember, PartialMessage, SelectMenuInteraction, VoiceState } from "discord.js";
 import { guild_type, guild_model } from "./obj/guild";
 import { user_type, user_model } from "./obj/user";
 
@@ -25,27 +25,17 @@ const out = {
 
 export default out;
 
-async function guild_get(msg: M | I | VoiceState) {
-  let guildDB: guild_type | null = await guild_model.findOne({ id: msg.guild?.id! });
+async function guild_get(msg: M | I | VoiceState | PartialMessage | SelectMenuInteraction) {
+  let guildDB: guild_type | null = await guild_model.findOne({ id: msg.guild!.id! });
   if (guildDB) {
+    guildDB.name = (msg.guild?.name) ? msg.guild.name : '';
     return guildDB;
   } else {
+    await guild_model.findOneAndDelete({ id: msg.guild!.id! });
     if (msg.guild?.id) {
-      let data = {
-        id: msg.guild?.id,
-        name: (msg.guild?.name) ? msg.guild.name : '',
-        prefix: (process.env.PREFIX) ? process.env.PREFIX : 'm;',
-        role: [],
-        tts: {
-          channelID: '',
-          use: true
-        },
-        autovc: {
-          first: [],
-          second: []
-        }
-      };
-      const guildDB: guild_type = new guild_model(data);
+      const guildDB: guild_type = new guild_model({});
+      guildDB.id = msg.guild.id;
+      guildDB.name = (msg.guild?.name) ? msg.guild.name : '';
       await guildDB.save().catch((err: any) => console.error(err));
       return guildDB;
     } else {
@@ -57,21 +47,14 @@ async function guild_get(msg: M | I | VoiceState) {
 async function user_get(member: MEM) {
   let userDB: user_type | null = await user_model.findOne({ id: member.user.id });
   if (userDB) {
+    userDB.tag = member.user.tag;
     return userDB;
   } else {
+    await user_model.findOneAndDelete({ id: member.user.id });
     if (member.user.id) {
-      let data = {
-        id: member.user.id,
-        tag: member.user.tag,
-        name: (member.nickname) ? member.nickname : member.user.username,
-        tts: {
-          istts: true,
-          time: 0,
-          banforid: '',
-          date: ''
-        }
-      };
-      const userDB: user_type = new user_model(data);
+      const userDB: user_type = new user_model({});
+      userDB.id = member.user.id;
+      userDB.tag = member.user.tag;
       await userDB.save().catch((err: any) => console.error(err));
       return userDB;
     } else {

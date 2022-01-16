@@ -3,7 +3,6 @@ import { client } from "..";
 import { writeFileSync, readFileSync, readdirSync, readdir, unlinkSync, unlink } from "fs";
 import { M } from "../aliases/discord.js";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
-import mkembed from "../function/mkembed";
 import { createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel, createAudioPlayer, getVoiceConnection, VoiceConnection } from "@discordjs/voice";
 import { getsignature, signaturesiteurl } from "./signature";
 import replacemsg from "./replacemsg";
@@ -88,31 +87,38 @@ export async function ttsplay(message: M, text: string) {
   });
   if (message.member) {
     let userDB = await MDB.get.user(message.member);
-    if (userDB && !userDB.tts.istts) {
-      client.msgdelete(message, 50, true);
-      return message.member.user.send({
-        embeds: [
-          mkembed({
-            author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
-            title: `\` TTS ban \``,
-            description: `
-              \` 현재 당신은 TTS ban 상태입니다. \`
-              
-              현재 TTS 를 사용할수 없는 상태입니다.
-
-              ban한사람 : <@${userDB.tts.banforid}>
-              ban된시간 : ${userDB.tts.date}
-            `,
-            color: 'DARK_RED'
-          })
-        ]
-      }).then(m => client.msgdelete(m, 2));
+    if (userDB && userDB.tts.some((ttsDB) => ttsDB.guildId === message.guildId!)) {
+      client.msgdelete(message, 70, true);
+      const ttsDB = userDB.tts[userDB.tts.findIndex(ttsDB => ttsDB.guildId === message.guildId!)];
+      if (ttsDB.inf || ttsDB.time - Date.now() > 0) {
+        return message.member.user.send({
+          embeds: [
+            client.mkembed({
+              author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
+              title: `\` TTS ban \``,
+              description: `
+                \` 현재 당신은 TTS ban 상태입니다. \`
+                
+                현재 TTS 를 사용할수 없는 상태입니다.
+                남은시간 : ${(ttsDB.inf) ? "무기한" : ((ttsDB.time - Date.now())/1000).toFixed(2) + "초"}
+  
+                ban한사람 : <@${ttsDB.banforid}>
+                ban된시간 : ${ttsDB.date}
+              `,
+              color: 'DARK_RED'
+            })
+          ]
+        }).then(m => client.msgdelete(m, 3));
+      } else {
+        userDB.tts.splice(userDB.tts.findIndex(ttsDB => ttsDB.guildId === message.guildId!), 1);
+        userDB.save().catch((err) => {});
+      }
     }
   }
   const channel = await getchannel(message);
   if (!channel) return message.channel.send({
     embeds: [
-      mkembed({
+      client.mkembed({
         title: `음성채널을 찾을수 없습니다.`,
         description: `음성채널에 들어간 다음 사용해주세요.`,
         color: 'ORANGE'

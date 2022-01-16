@@ -3,33 +3,33 @@ import { Document, model, Schema } from "mongoose";
 config();
 
 export interface guild_type extends Document {
-  id: string,
-  name: string,
-  prefix: string,
-  role: string[],
+  id: string;
+  name: string;
+  prefix: string;
+  role: string[];
   tts: {
-    channelID: string,
-    use: boolean
+    channelId: string;
+    use: boolean;
   },
   autovc: {
-    first: { channelID: string, categoryID: string, limit: number }[],
-    second: string[]
+    first: { channelID: string, categoryID: string, limit: number }[];
+    second: string[];
   }
 }
 
 const GuildSchema: Schema = new Schema({
-  id: { type: String, required: true },
-  name: { type: String },
-  prefix: { type: String, default: (process.env.PREFIX) ? process.env.PREFIX : 'm;' },
-  role: { type: Array },
+  id: { type: String, required: true, default: "" },
+  name: { type: String, default: "" },
+  prefix: { type: String, default: (process.env.PREFIX) ? process.env.PREFIX : 'e;' },
+  role: { type: Array, default: [] },
   tts: {
-    channelID: { type: String },
-    use: { type: Boolean }
+    channelId: { type: String, default: "" },
+    use: { type: Boolean, default: true }
   },
   autovc: {
-    first: { type: Array },
-    second: { type: Array }
+    first: { type: Array, default: [] },
+    second: { type: Array, default: [] }
   }
 });
 
-export const guild_model = model<guild_type>('Guild', GuildSchema);
+export const guild_model = model<guild_type>(`Guild`, GuildSchema);

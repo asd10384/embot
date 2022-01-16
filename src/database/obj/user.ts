@@ -3,27 +3,22 @@ import { Document, model, Schema } from "mongoose";
 config();
 
 export interface user_type extends Document {
-  id: string,
-  tag: string,
-  nickname: string,
+  id: string;
+  tag: string;
   tts: {
-    istts: boolean,
-    time: number,
-    banforid: string,
-    date: string
-  }
+    guildId: string;
+    time: number;
+    inf: boolean;
+    banforid: string;
+    date: string;
+  }[];
 }
 
 const UserSchema: Schema = new Schema({
-  id: { type: String, required: true },
-  tag: { type: String, required: true },
-  nickname: { type: String },
-  tts: {
-    istts: { type: Boolean },
-    time: { type: Number },
-    banforid: { type: String },
-    date: { type: String }
-  }
+  id: { type: String, required: true, default: "" },
+  tag: { type: String, required: true, default: "" },
+  nickname: { type: String, default: "" },
+  tts: { type: Array, default: [] }
 });
 
-export const user_model = model<user_type>('User', UserSchema);
+export const user_model = model<user_type>(`User`, UserSchema);
