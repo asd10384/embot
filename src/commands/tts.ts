@@ -9,6 +9,7 @@ import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } fr
 import { getsignature } from "../tts/signature";
 import { restartsignature } from "../tts/tts";
 import nowdate from "../function/nowdate";
+import { signaturelist } from "./시그니쳐";
 
 /**
  * DB
@@ -147,7 +148,7 @@ export default class TtsCommand implements Command {
       return await interaction.editReply({ content: '완료' });
     }
     if (cmdgrp === '시그니쳐') {
-      if (cmd === '목록') return await interaction.editReply({ embeds: await this.signaturelist() });
+      if (cmd === '목록') return await interaction.editReply({ embeds: await signaturelist() });
       if (cmd === "리로드") {
         await restartsignature();
         return await interaction.editReply({ content: `시그니쳐를 성공적으로 불러왔습니다.` });
@@ -190,7 +191,7 @@ export default class TtsCommand implements Command {
       return message.channel.send({ content: "채널을 찾을수 없음" }).then(m => client.msgdelete(m, 1));
     }
     if (args[0] === '시그니쳐') {
-      if (args[1] === '목록') return await message.channel.send({ embeds: await this.signaturelist() }).then(m => client.msgdelete(m, 8));
+      if (args[1] === '목록') return await message.channel.send({ embeds: await signaturelist() }).then(m => client.msgdelete(m, 8));
       if (args[1] === "리로드") {
         await restartsignature();
         return message.channel.send({ content: `시그니쳐를 성공적으로 불러왔습니다.` }).then(m => client.msgdelete(m, 2));
@@ -242,33 +243,6 @@ export default class TtsCommand implements Command {
       ]
     });
     return `<#${channel?.id!}> 생성 완료`;
-  }
-
-  async signaturelist(): Promise<MessageEmbed[]> {
-    let max = 20;
-    const sig = await getsignature();
-    let page = Math.ceil(sig[0].length / 20);
-    let embedlist: MessageEmbed[] = [
-      client.mkembed({
-        title: `**시그니쳐 목록** [ 1/${page} ]`,
-        description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`,
-        color: 'ORANGE'
-      })
-    ];
-    sig[0].forEach((obj, i) => {
-      if (!embedlist[Math.floor(i / max)]) embedlist[Math.floor(i / max)] = client.mkembed({
-        title: `**시그니쳐 목록** [ ${Math.floor(i / max) + 1}/${page} ]`,
-        color: 'ORANGE'
-      }) 
-      embedlist[Math.floor(i / max)].addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
-    });
-    embedlist.push(
-      client.mkembed({
-        description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`,
-        color: 'ORANGE'
-      })
-    );
-    return embedlist;
   }
 
   async ban(message: I | M, userId: string, time: number): Promise<MessageEmbed> {
