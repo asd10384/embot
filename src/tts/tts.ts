@@ -191,8 +191,11 @@ async function mktts(fileURL: string, text: string) {
     for (let i in list) {
       if (snlist.includes(list[i])) {
         var encodetext = encodeURI(scobj[list[i]]);
-        var getbuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer" });
-        buf = Buffer.from(getbuf.data);
+        var getbuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer", timeout: 3000 }).catch((err) => {
+          return undefined;
+        });
+        if (getbuf) buf = Buffer.from(getbuf.data);
+        else buf = await gettext(list[i]);
       } else {
         list[i] = replacemsg(list[i]);
         buf = await gettext(list[i]);
