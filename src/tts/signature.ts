@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const signaturesiteurl = `https://asd10384.github.io/signaturesite`;
+export const signaturesiteurl = `https://signaturesite.netlify.app`;
 
 export async function getsignature(): Promise<[ { name: string[], url: string }[], { [key: string]: string }] > {
   let sncheckobj: { [key: string]: string } = {};
