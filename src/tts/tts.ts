@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { client } from "..";
-import { writeFileSync, readFileSync, readdirSync, readdir, unlinkSync, unlink } from "fs";
+import { writeFileSync, readFileSync, readdir, unlink, existsSync, mkdirSync } from "fs";
 import { M } from "../aliases/discord.js";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import { createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel, createAudioPlayer, getVoiceConnection, VoiceConnection } from "@discordjs/voice";
@@ -12,7 +12,8 @@ import MDB from "../database/Mongodb";
 import axios from "axios";
 config();
 
-const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
+export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
+export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH : process.env.SIGNATURE_FILE_PATH+'/' : '';
 
 const fileformat: {
   ttsformat: "AUDIO_ENCODING_UNSPECIFIED" | "LINEAR16" | "MP3" | "OGG_OPUS",
@@ -23,6 +24,8 @@ const fileformat: {
 };
 const ttsfilelist: Set<string> = new Set();
 
+if (!existsSync(ttsfilepath)) mkdirSync(ttsfilepath);
+if (!existsSync(signaturefilepath)) mkdirSync(signaturefilepath);
 readdir(ttsfilepath, (err, files) => {
   if (err) console.error(err);
   files.forEach((file) => {
@@ -31,6 +34,27 @@ readdir(ttsfilepath, (err, files) => {
     });
   });
 });
+
+readdir(signaturefilepath, (err, files) => {
+  if (err) console.error(err);
+  files.forEach((file) => {
+    if (file.endsWith(".mp3")) {
+      unlink(`${signaturefilepath}${file}`, (err) => {
+        if (err) return;
+      });
+    } else {
+      readdir(`${signaturefilepath}${file}`, (err, fl) => {
+        if (err) return;
+        fl.forEach((val) => {
+          unlink(`${signaturefilepath}${file}${val}`, (err) => {
+            if (err) return;
+          });
+        });
+      });
+    }
+  })
+})
+getsignature();
 
 /**
  * @discordjs/voice 모듈의 추가 모듈 확인 명령어
@@ -190,11 +214,16 @@ async function mktts(fileURL: string, text: string) {
   if (list.length > 0) {
     for (let i in list) {
       if (snlist.includes(list[i])) {
-        var encodetext = encodeURI(scobj[list[i]]);
-        var getbuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer", timeout: 3000 }).catch((err) => {
-          return undefined;
-        });
-        if (getbuf) buf = Buffer.from(getbuf.data);
+        var getbuf: Buffer | undefined = undefined;
+        if (existsSync(`${signaturefilepath}${scobj[list[i]]}.mp3`)) getbuf = readFileSync(`${signaturefilepath}${scobj[list[i]]}.mp3`);
+        if (!getbuf) {
+          var encodetext = encodeURI(scobj[list[i]]);
+          var getsitebuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer", timeout: 3000 }).catch((err) => {
+            return undefined;
+          });
+          if (getsitebuf?.data) getbuf = getsitebuf.data;
+        }
+        if (getbuf) buf = Buffer.from(getbuf);
         else buf = await gettext(list[i]);
       } else {
         list[i] = replacemsg(list[i]);
