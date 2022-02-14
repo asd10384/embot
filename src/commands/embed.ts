@@ -49,7 +49,7 @@ const colorlist = [
  */
 
 /** 예시 명령어 */
-export default class ExampleCommand implements Command {
+export default class EmbedCommand implements Command {
   /** 해당 명령어 설명 */
   name = "임베드";
   visible = true;
