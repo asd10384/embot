@@ -1,9 +1,8 @@
 import { Guild } from "discord.js";
-import { config } from "dotenv";
-import { client } from "..";
+import "dotenv/config";
+import { client } from "../index";
 import MDB from "../database/Mongodb";
 
-config();
 
 /** onReady 핸들러 */
 export default function guildDelete(guild: Guild) {

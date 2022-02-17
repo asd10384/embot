@@ -1,9 +1,8 @@
-import { client } from "..";
+import { client } from "../index";
 import MDB from "../database/Mongodb";
 import { I, M } from "../aliases/discord.js";
 import { GuildMemberRoleManager, MessageEmbed, Permissions } from "discord.js";
-import { config } from "dotenv";
-config();
+import "dotenv/config";
 
 /**
  * DB

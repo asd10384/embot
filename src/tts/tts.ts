@@ -1,16 +1,15 @@
-import { config } from "dotenv";
-import { client } from "..";
+import "dotenv/config";
+import { client } from "../index";
 import { writeFileSync, readFileSync, readdir, unlink, existsSync, mkdirSync } from "fs";
 import { M } from "../aliases/discord.js";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import { createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel, createAudioPlayer, getVoiceConnection, VoiceConnection } from "@discordjs/voice";
-import { getsignature, signaturesiteurl } from "./signature";
+import { getsignature, makefile, signaturesiteurl } from "./signature";
 import replacemsg from "./replacemsg";
 import googlettsapi from "../tts/googlettsapi";
 import { set_timer } from "./timer";
 import MDB from "../database/Mongodb";
 import axios from "axios";
-config();
 
 export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
 export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH : process.env.SIGNATURE_FILE_PATH+'/' : '';
@@ -75,11 +74,13 @@ var signature_check_obj: { [key: string]: string } = {};
 var snlist: string[] = [];
 var sncheck = /defaultRegExpmessage/gi;
 
-export async function restartsignature() {
+export async function restartsignature(): Promise<string> {
   const sig = await getsignature();
   signature_check_obj = sig[1];
   snlist = Object.keys(signature_check_obj);
   sncheck = new RegExp(Object.keys(signature_check_obj).join('|'), 'gi');
+  const getlog = await makefile(sig[0]);
+  return getlog;
 }
 
 export async function ttsplay(message: M, text: string) {

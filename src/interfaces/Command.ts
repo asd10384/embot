@@ -1,3 +1,4 @@
+import { B } from "../aliases/discord.js";
 import { ChatInputApplicationCommandData, CommandInteraction, Message, SelectMenuInteraction } from "discord.js";
 
 export interface Command {
@@ -11,4 +12,5 @@ export interface Command {
   slashrun?: (args: CommandInteraction) => Promise<any>;
   msgrun?: (message: Message, args: string[]) => Promise<any>;
   menurun?: (interaction: SelectMenuInteraction, args: string[]) => Promise<any>;
+  buttonrun?: (interaction: B, args: string[]) => Promise<any>;
 }

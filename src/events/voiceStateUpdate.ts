@@ -1,4 +1,4 @@
-import { client } from "..";
+import { client } from "../index";
 import { VoiceChannel, VoiceState } from 'discord.js';
 import MDB from "../database/Mongodb";
 

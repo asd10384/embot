@@ -1,4 +1,4 @@
-import { client } from "..";
+import { client } from "../index";
 import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
@@ -6,7 +6,6 @@ import { Message, MessageActionRow, MessageButton, MessageEmbed } from "discord.
 import MDB from "../database/Mongodb";
 import { ChannelTypes } from "discord.js/typings/enums";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
-import { getsignature } from "../tts/signature";
 import { restartsignature } from "../tts/tts";
 import nowdate from "../function/nowdate";
 import { signaturelist } from "./시그니쳐";
@@ -150,8 +149,8 @@ export default class TtsCommand implements Command {
     if (cmdgrp === '시그니쳐') {
       if (cmd === '목록') return await interaction.editReply({ embeds: await signaturelist() });
       if (cmd === "리로드") {
-        await restartsignature();
-        return await interaction.editReply({ content: `시그니쳐를 성공적으로 불러왔습니다.` });
+        const log = await restartsignature();
+        return await interaction.editReply({ content: `${log}` });
       }
     }
     if (cmd === 'ban') {

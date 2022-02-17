@@ -1,4 +1,4 @@
-import { client } from "..";
+import { client } from "../index";
 import { getVoiceConnection } from "@discordjs/voice";
 
 export function set_timer(guildID: string, start: boolean, time?: number) {

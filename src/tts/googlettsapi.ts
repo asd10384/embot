@@ -1,6 +1,5 @@
-import { config } from "dotenv";
+import "dotenv/config";
 import { writeFileSync } from "fs";
-config();
 
 export default function getkeyfile() {
     var option = {

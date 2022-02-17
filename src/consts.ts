@@ -1,8 +1,7 @@
 import { IntentsString } from 'discord.js';
-import { config } from "dotenv";
+import "dotenv/config";
 import { join } from "path";
 
-config();
 
 /** 상수목록 */
 export default class Consts {
