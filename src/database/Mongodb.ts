@@ -31,7 +31,7 @@ async function guild_get(msg: M | I | VoiceState | PartialMessage | SelectMenuIn
     guildDB.name = (msg.guild?.name) ? msg.guild.name : '';
     return guildDB;
   } else {
-    await guild_model.findOneAndDelete({ id: msg.guild!.id! });
+    await guild_model.findOneAndDelete({ id: msg.guild!.id! }).catch((err) => {});
     if (msg.guild?.id) {
       const guildDB: guild_type = new guild_model({});
       guildDB.id = msg.guild.id;
@@ -50,7 +50,7 @@ async function user_get(member: MEM) {
     userDB.tag = member.user.tag;
     return userDB;
   } else {
-    await user_model.findOneAndDelete({ id: member.user.id });
+    await user_model.findOneAndDelete({ id: member.user.id }).catch((err) => {});
     if (member.user.id) {
       const userDB: user_type = new user_model({});
       userDB.id = member.user.id;
