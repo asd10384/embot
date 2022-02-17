@@ -20,7 +20,6 @@ export async function makefile(snobj: { name: string[], url: string }[]): Promis
   var sucnum = 0;
   var errnum = 0;
   var errlog: string[] = [];
-  console.log(1);
   for (let i in snobj) {
     let val = snobj[i];
     const args = val.url.trim().split("/");
@@ -46,5 +45,5 @@ export async function makefile(snobj: { name: string[], url: string }[]): Promis
       }
     }
   }
-  return `성공적으로 불러온 시그니쳐: ${sucnum}개\n오류난 시그니쳐: ${errnum}개\n${errnum ? `오류코드:\n${errlog.map((log, i) => `${i+1}. ${log}`).join("\n")}` : ""}`;
+  return `성공적으로 불러온 시그니쳐: ${sucnum}개\n오류난 시그니쳐: ${errnum}개\n${errnum ? `오류코드:\n${errlog.join("\n")}` : ""}`;
 }
