@@ -87,6 +87,7 @@ export async function ttsplay(message: M, text: string) {
   if (!signature_check_start) {
     signature_check_start = true;
     await restartsignature();
+    return;
   }
   text = (/https?\:\/\//gi.test(text))
     ? (/https?\:\/\/(www\.)?youtu/gi.test(text))
@@ -159,12 +160,14 @@ export async function ttsplay(message: M, text: string) {
       break;
     }
   }
-  const file = await mktts(randomfilename, text);
+  const file = await mktts(randomfilename, text).catch((err) => {
+    return undefined;
+  });
   if (!file) return;
   const vca = message.guild?.voiceAdapterCreator! as DiscordGatewayAdapterCreator;
   const bvcb = await getbotchannelboolen(message);
   set_timer(message.guildId!, true);
-  play(vca, message.guildId!, channel.id, file, bvcb, randomfilename);
+  play(vca, message.guildId!, channel.id, file, bvcb, randomfilename).catch((err) => {});
 }
 
 export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, bvcb: boolean, filename: string, options?: { volume?: number }) {
@@ -182,14 +185,14 @@ export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, gu
     });
     resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
     Player.play(resource);
-    setTimeout(() => {
-      unlink(`${ttsfilepath}${filename}.${fileformat.fileformat}`, (err) => {
-        ttsfilelist.delete(filename);
-        if (err) return;
-      });
-    }, 1500);
-    return subscription;
   } catch (err) {}
+  setTimeout(() => {
+    unlink(`${ttsfilepath}${filename}.${fileformat.fileformat}`, (err) => {
+      ttsfilelist.delete(filename);
+      if (err) return;
+    });
+  }, 2500);
+  return subscription;
 }
 
 async function getchannel(message: M) {
@@ -202,7 +205,7 @@ async function getbotchannelboolen(message: M) {
   return false;
 }
 
-async function mktts(fileURL: string, text: string) {
+async function mktts(fileURL: string, text: string): Promise<string | undefined> {
   const scobj: any = signature_check_obj;
   let list: any;
   let buf: any;
@@ -216,19 +219,30 @@ async function mktts(fileURL: string, text: string) {
     for (let i in list) {
       if (snlist.includes(list[i])) {
         var getbuf: Buffer | undefined = undefined;
-        if (existsSync(`${signaturefilepath}${scobj[list[i]]}.mp3`)) getbuf = readFileSync(`${signaturefilepath}${scobj[list[i]]}.mp3`);
-        if (!getbuf) {
-          var encodetext = encodeURI(scobj[list[i]]);
-          var getsitebuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer", timeout: 3000 }).catch((err) => {
+        try {
+          if (existsSync(`${signaturefilepath}${scobj[list[i]]}.mp3`)) getbuf = readFileSync(`${signaturefilepath}${scobj[list[i]]}.mp3`);
+          if (!getbuf) {
+            var encodetext = encodeURI(scobj[list[i]]);
+            var getsitebuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer", timeout: 3000 }).catch((err) => {
+              return undefined;
+            });
+            if (getsitebuf?.data) getbuf = getsitebuf.data;
+          }
+        } catch (err) {
+          getbuf = undefined;
+        }
+        if (getbuf) {
+          buf = Buffer.from(getbuf);
+        } else {
+          buf = await gettext(list[i]).catch((err) => {
             return undefined;
           });
-          if (getsitebuf?.data) getbuf = getsitebuf.data;
         }
-        if (getbuf) buf = Buffer.from(getbuf);
-        else buf = await gettext(list[i]);
       } else {
         list[i] = replacemsg(list[i]);
-        buf = await gettext(list[i]);
+        buf = await gettext(list[i]).catch((err) => {
+          return undefined;
+        });
       }
       if (!buf) checkerr = true;
       list[i] = buf;
@@ -240,13 +254,17 @@ async function mktts(fileURL: string, text: string) {
       return;
     }
   } else {
-    output = await gettext(text);
+    output = await gettext(text).catch((err) => {
+      return undefined;
+    });
     if (!output) return;
   }
-  let filename = `${ttsfilepath}${fileURL}.${fileformat.fileformat}`;
+  let filename: string | undefined = `${ttsfilepath}${fileURL}.${fileformat.fileformat}`;
   try {
     writeFileSync(filename, output);
-  } catch (err) {}
+  } catch (err) {
+    filename = undefined;
+  }
   return filename;
 }
 
