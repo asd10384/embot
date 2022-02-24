@@ -1,6 +1,5 @@
 import { client } from "../index";
 import { getVoiceConnection } from "@discordjs/voice";
-import { PlayerMap } from "./tts";
 
 export function set_timer(guildID: string, start: boolean, time?: number) {
   client.ttstimer.set(guildID, { start: start, time: (time) ? time : client.ttstimertime });
@@ -21,7 +20,6 @@ setInterval(() => {
         const bvcb = getbotchannelboolen(guildID);
         const getvoicechannel = getVoiceConnection(guildID);
         if (bvcb && getvoicechannel) {
-          PlayerMap.get(guildID)?.stop();
           getVoiceConnection(guildID)!.disconnect();
           set_timer(guildID, false);
         } else {

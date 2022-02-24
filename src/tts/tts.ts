@@ -11,7 +11,7 @@ import { set_timer } from "./timer";
 import MDB from "../database/Mongodb";
 import axios from "axios";
 
-export const PlayerMap: Map<string, AudioPlayer | undefined> = new Map();
+export const PlayerMap: Map<string, PlayerSubscription | undefined> = new Map();
 export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
 export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH : process.env.SIGNATURE_FILE_PATH+'/' : '';
 
@@ -171,23 +171,27 @@ export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, gu
     guildId: guildID,
     channelId: channelID
   });
-  const Player = createAudioPlayer();
-  const subscription = connection.subscribe(Player);
 
   try {
+    const Player = createAudioPlayer();
+    const subscription = connection.subscribe(Player);
     const resource = createAudioResource(fileURL, {
       inlineVolume: true
     });
     resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
-    PlayerMap.get(guildID)?.stop();
-    PlayerMap.set(guildID, Player);
+    PlayerMap.get(guildID)?.player.stop();
+    PlayerMap.set(guildID, subscription);
     Player.play(resource);
-  } catch (err) {}
+  } catch (err) {
+    PlayerMap.set(guildID, undefined);
+  }
   setTimeout(() => {
-    unlink(`${ttsfilepath}${filename}.${fileformat.fileformat}`, (err) => {
-      if (ttsfilelist.has(filename)) ttsfilelist.delete(filename);
-      if (err) return;
-    });
+    try {
+      unlink(`${ttsfilepath}${filename}.${fileformat.fileformat}`, (err) => {
+        if (ttsfilelist.has(filename)) ttsfilelist.delete(filename);
+        if (err) return;
+      });
+    } catch (err) {}
   }, 2500);
   return;
 }
@@ -269,7 +273,7 @@ async function gettext(text: string) {
   let response: any = undefined;
   try {
     response = await ttsclient.synthesizeSpeech({
-      input: {text: text},
+      input: { text: text },
       voice: {
         languageCode: 'ko-KR',
         name: 'ko-KR-Standard-A'
