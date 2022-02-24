@@ -6,7 +6,11 @@ export const signaturesiteurl = `https://signaturesite.netlify.app`;
 
 export async function getsignature(): Promise<[ { name: string[], url: string }[], { [key: string]: string }] > {
   let sncheckobj: { [key: string]: string } = {};
-  const snobj: { name: string[], url: string }[] = await (await axios.get(`${signaturesiteurl}/signature.json`, { responseType: "json" })).data;
+  const get: { [key: string]: any, data: any } = await axios.get(`${signaturesiteurl}/signature.json`, { responseType: "json", timeout: 5000 }).catch((err) => {
+    return { data: undefined };
+  });
+  const snobj: { name: string[], url: string }[] | undefined = get.data;
+  if (!snobj) return [ [], {} ];
   for (let i in snobj) {
     let obj = snobj[i];
     for (let j in obj.name) {
@@ -25,7 +29,7 @@ export async function makefile(snobj: { name: string[], url: string }[]): Promis
     const args = val.url.trim().split("/");
     if (args.length > 1) {
       if (!existsSync(`${signaturefilepath}${args[0]}`)) mkdirSync(`${signaturefilepath}${args[0]}`);
-      var getbuf = await axios.get(`${signaturesiteurl}/file/${encodeURI(val.url)}.mp3`, { responseType: "arraybuffer", timeout: 5500 }).catch((err) => {
+      var getbuf = await axios.get(`${signaturesiteurl}/file/${encodeURI(val.url)}.mp3`, { responseType: "arraybuffer", timeout: 5000 }).catch((err) => {
         return undefined;
       });
       if (getbuf && getbuf.data) {
@@ -36,6 +40,7 @@ export async function makefile(snobj: { name: string[], url: string }[]): Promis
             console.log(`${val.url}파일생성중 오류발생`);
           } else {
             sucnum+=1;
+            console.log(`${val.url}파일생성 완료`);
           }
         });
       } else {

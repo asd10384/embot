@@ -5,6 +5,7 @@ import { I, D, M } from "../aliases/discord.js.js";
 import { Message, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
 import MDB from "../database/Mongodb";
 import { getsignature } from "../tts/signature";
+import { snobj } from "../tts/tts";
 
 /**
  * DB
@@ -45,8 +46,8 @@ export default class 시그니쳐Command implements Command {
 
 export async function signaturelist(): Promise<MessageEmbed[]> {
   let max = 20;
-  const sig = await getsignature();
-  let page = Math.ceil(sig[0].length / 20);
+  const getsnobj = snobj;
+  let page = Math.ceil(getsnobj.length / 20);
   let embedlist: MessageEmbed[] = [
     client.mkembed({
       title: `**시그니쳐 목록** [ 1/${page} ]`,
@@ -54,7 +55,7 @@ export async function signaturelist(): Promise<MessageEmbed[]> {
       color: 'ORANGE'
     })
   ];
-  sig[0].forEach((obj, i) => {
+  getsnobj.forEach((obj, i) => {
     if (!embedlist[Math.floor(i / max)]) embedlist[Math.floor(i / max)] = client.mkembed({
       title: `**시그니쳐 목록** [ ${Math.floor(i / max) + 1}/${page} ]`,
       color: 'ORANGE'

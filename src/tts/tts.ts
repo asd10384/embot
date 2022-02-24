@@ -3,7 +3,7 @@ import { client } from "../index";
 import { writeFileSync, readFileSync, readdir, unlink, existsSync, mkdirSync } from "fs";
 import { M } from "../aliases/discord.js";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
-import { createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel, createAudioPlayer, getVoiceConnection, VoiceConnection } from "@discordjs/voice";
+import { createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel, createAudioPlayer, VoiceConnection, PlayerSubscription, AudioPlayer } from "@discordjs/voice";
 import { getsignature, makefile, signaturesiteurl } from "./signature";
 import replacemsg from "./replacemsg";
 import googlettsapi from "../tts/googlettsapi";
@@ -11,6 +11,7 @@ import { set_timer } from "./timer";
 import MDB from "../database/Mongodb";
 import axios from "axios";
 
+export const PlayerMap: Map<string, AudioPlayer | undefined> = new Map();
 export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
 export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH : process.env.SIGNATURE_FILE_PATH+'/' : '';
 
@@ -51,9 +52,8 @@ readdir(signaturefilepath, (err, files) => {
         });
       });
     }
-  })
-})
-getsignature();
+  });
+});
 
 /**
  * @discordjs/voice 모듈의 추가 모듈 확인 명령어
@@ -68,27 +68,22 @@ const ttsclient = new TextToSpeechClient({
   keyFile: 'googlettsapi.json',
   fallback: false
 });
-
-var signature_check_start = false;
-var signature_check_obj: { [key: string]: string } = {};
-var snlist: string[] = [];
-var sncheck = /defaultRegExpmessage/gi;
+export var snobj: { name: string[], url: string }[] = [];
+export var sncheckobj: { [key: string]: string } = {};
+export var snlist: string[] = [];
+export var sncheck = /defaultRegExpmessage/gi;
 
 export async function restartsignature(): Promise<string> {
   const sig = await getsignature();
-  signature_check_obj = sig[1];
-  snlist = Object.keys(signature_check_obj);
-  sncheck = new RegExp(Object.keys(signature_check_obj).join('|'), 'gi');
+  snobj = sig[0];
+  sncheckobj = sig[1];
+  snlist = Object.keys(sncheckobj);
+  sncheck = new RegExp(Object.keys(sncheckobj).join('|'), 'gi');
   const getlog = await makefile(sig[0]);
   return getlog;
 }
 
 export async function ttsplay(message: M, text: string) {
-  if (!signature_check_start) {
-    signature_check_start = true;
-    await restartsignature();
-    return;
-  }
   text = (/https?\:\/\//gi.test(text))
     ? (/https?\:\/\/(www\.)?youtu/gi.test(text))
     ? '유튜브 주소'
@@ -184,15 +179,17 @@ export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, gu
       inlineVolume: true
     });
     resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
+    PlayerMap.get(guildID)?.stop();
+    PlayerMap.set(guildID, Player);
     Player.play(resource);
   } catch (err) {}
   setTimeout(() => {
     unlink(`${ttsfilepath}${filename}.${fileformat.fileformat}`, (err) => {
-      ttsfilelist.delete(filename);
+      if (ttsfilelist.has(filename)) ttsfilelist.delete(filename);
       if (err) return;
     });
   }, 2500);
-  return subscription;
+  return;
 }
 
 async function getchannel(message: M) {
@@ -206,7 +203,7 @@ async function getbotchannelboolen(message: M) {
 }
 
 async function mktts(fileURL: string, text: string): Promise<string | undefined> {
-  const scobj: any = signature_check_obj;
+  const scobj: any = sncheckobj;
   let list: any;
   let buf: any;
   let output: any;
