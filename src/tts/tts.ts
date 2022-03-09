@@ -12,8 +12,8 @@ import MDB from "../database/Mongodb";
 import axios from "axios";
 
 export const PlayerMap: Map<string, PlayerSubscription | undefined> = new Map();
-export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH : process.env.TTS_FILE_PATH+'/' : '';
-export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH : process.env.SIGNATURE_FILE_PATH+'/' : '';
+export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH.slice(0,-1) : process.env.TTS_FILE_PATH : '';
+export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH.slice(0,-1) : process.env.SIGNATURE_FILE_PATH : '';
 
 const fileformat: {
   ttsformat: "AUDIO_ENCODING_UNSPECIFIED" | "LINEAR16" | "MP3" | "OGG_OPUS",
@@ -23,37 +23,6 @@ const fileformat: {
   fileformat: 'mp3'
 };
 const ttsfilelist: Set<string> = new Set();
-
-if (!existsSync(ttsfilepath)) mkdirSync(ttsfilepath);
-if (!existsSync(signaturefilepath)) mkdirSync(signaturefilepath);
-readdir(ttsfilepath, (err, files) => {
-  if (err) console.error(err);
-  files.forEach((file) => {
-    unlink(ttsfilepath+file, (err) => {
-      if (err) return;
-    });
-  });
-});
-
-readdir(signaturefilepath, (err, files) => {
-  if (err) console.error(err);
-  files.forEach((file) => {
-    if (file.endsWith(".mp3")) {
-      unlink(`${signaturefilepath}${file}`, (err) => {
-        if (err) return;
-      });
-    } else {
-      readdir(`${signaturefilepath}${file}`, (err, fl) => {
-        if (err) return;
-        fl.forEach((val) => {
-          unlink(`${signaturefilepath}${file}${val}`, (err) => {
-            if (err) return;
-          });
-        });
-      });
-    }
-  });
-});
 
 /**
  * @discordjs/voice 모듈의 추가 모듈 확인 명령어
@@ -187,7 +156,7 @@ export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, gu
   }
   setTimeout(() => {
     try {
-      unlink(`${ttsfilepath}${filename}.${fileformat.fileformat}`, (err) => {
+      unlink(`${ttsfilepath}/${filename}.${fileformat.fileformat}`, (err) => {
         if (ttsfilelist.has(filename)) ttsfilelist.delete(filename);
         if (err) return;
       });
@@ -221,7 +190,7 @@ async function mktts(fileURL: string, text: string): Promise<string | undefined>
       if (snlist.includes(list[i])) {
         var getbuf: Buffer | undefined = undefined;
         try {
-          if (existsSync(`${signaturefilepath}${scobj[list[i]]}.mp3`)) getbuf = readFileSync(`${signaturefilepath}${scobj[list[i]]}.mp3`);
+          if (existsSync(`${signaturefilepath}/${scobj[list[i]]}.mp3`)) getbuf = readFileSync(`${signaturefilepath}/${scobj[list[i]]}.mp3`);
           if (!getbuf) {
             var encodetext = encodeURI(scobj[list[i]]);
             var getsitebuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer", timeout: 3000 }).catch((err) => {
@@ -260,7 +229,7 @@ async function mktts(fileURL: string, text: string): Promise<string | undefined>
     });
     if (!output) return;
   }
-  let filename: string | undefined = `${ttsfilepath}${fileURL}.${fileformat.fileformat}`;
+  let filename: string | undefined = `${ttsfilepath}/${fileURL}.${fileformat.fileformat}`;
   try {
     writeFileSync(filename, output);
   } catch (err) {

@@ -1,5 +1,6 @@
 import axios from "axios";
-import { existsSync, mkdirSync, writeFile } from "fs";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { client } from "../index";
 import { signaturefilepath } from "./tts";
 
 export const signaturesiteurl = `https://signaturesite.netlify.app`;
@@ -24,31 +25,30 @@ export async function makefile(snobj: { name: string[], url: string }[]): Promis
   var sucnum = 0;
   var errnum = 0;
   var errlog: string[] = [];
-  for (let i in snobj) {
+  for (let i=0; i<snobj.length; i++) {
     let val = snobj[i];
     const args = val.url.trim().split("/");
-    if (args.length > 1) {
-      if (!existsSync(`${signaturefilepath}${args[0]}`)) mkdirSync(`${signaturefilepath}${args[0]}`);
-      var getbuf = await axios.get(`${signaturesiteurl}/file/${encodeURI(val.url)}.mp3`, { responseType: "arraybuffer", timeout: 5000 }).catch((err) => {
-        return undefined;
-      });
-      if (getbuf && getbuf.data) {
-        writeFile(`${signaturefilepath}${val.url}.mp3`, getbuf.data, (err) => {
-          if (err) {
-            errnum+=1;
-            errlog.push(`${val.url}.mp3파일생성중 오류발생`);
-            console.log(`${val.url}파일생성중 오류발생`);
-          } else {
-            sucnum+=1;
-            console.log(`${val.url}파일생성 완료`);
-          }
-        });
-      } else {
+    if (args.length > 1) if (!existsSync(`${signaturefilepath}/${args[0]}`)) mkdirSync(`${signaturefilepath}/${args[0]}`);
+    var getbuf = await axios.get(`${signaturesiteurl}/file/${encodeURI(val.url)}.mp3`, { responseType: "arraybuffer", timeout: 5000 }).catch((err) => {
+      return undefined;
+    });
+    let num = ((i+1) < 10) ? "0"+(i+1) : i+1;
+    if (getbuf && getbuf.data) {
+      try {
+        writeFileSync(`${signaturefilepath}/${val.url}.mp3`, getbuf.data);
+        sucnum+=1;
+        console.log(`${num}. 파일생성 완료 : ${val.url}`);
+      } catch (err) {
         errnum+=1;
-        errlog.push(`${val.url}.mp3불러오는중 오류발생`);
-        console.log(`${val.url}불러오는중 오류발생`);
+        errlog.push(`${num}. 파일생성중 오류발생 : ${val.url}`);
+        console.log(`${num}. 파일생성중 오류발생 : ${val.url}`);
       }
+    } else {
+      errnum+=1;
+      errlog.push(`${num}. 불러오는중 오류발생 : ${val.url}`);
+      console.log(`${num}. 불러오는중 오류발생 : ${val.url}`);
     }
   }
+  await client.sleep(500);
   return `성공적으로 불러온 시그니쳐: ${sucnum}개\n오류난 시그니쳐: ${errnum}개\n${errnum ? `오류코드:\n${errlog.join("\n")}` : ""}`;
 }

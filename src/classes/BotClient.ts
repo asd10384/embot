@@ -1,5 +1,5 @@
+import "dotenv/config";
 import { ChatInputApplicationCommandData, Client, ClientEvents, ColorResolvable, EmbedFieldData, Message, MessageEmbed } from 'discord.js';
-import { config } from 'dotenv';
 import _ from '../consts';
  // .env 불러오기
 
@@ -14,6 +14,7 @@ export default class BotClient extends Client {
   debug: boolean;
   prefix: string;
   msgdelete: (m: Message, deletetime: number, customtime?: boolean) => void;
+  sleep: (ms: number) => Promise<void>;
   deletetime: number;
   ttsfilepath: string;
   ttstimer: Map<string, { start: boolean, time: number }>;
@@ -46,6 +47,9 @@ export default class BotClient extends Client {
         } catch(err) {}
       }, dtime);
     };
+    this.sleep = (ms: number) => {
+      return new Promise(res => setTimeout(res, ms));
+    }
     this.ttstimer = new Map<string, { start: boolean, time: number }>();
     this.ttstimertime = (60) * 45; //분
     this.embedcolor = process.env.EMBED_COLOR ? process.env.EMBED_COLOR.trim().toUpperCase() as ColorResolvable : "ORANGE";
