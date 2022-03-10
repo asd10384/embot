@@ -20,6 +20,7 @@ export default class ExampleCommand implements Command {
   /** 해당 명령어 설명 */
   name = "leave";
   visible = true;
+  description = "tts leave";
   information = "tts leave";
   aliases = [];
   metadata = <D>{
