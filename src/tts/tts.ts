@@ -142,13 +142,13 @@ export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, gu
   });
 
   try {
+    PlayerMap.get(guildID)?.player.stop();
     const Player = createAudioPlayer();
     const subscription = connection.subscribe(Player);
     const resource = createAudioResource(fileURL, {
       inlineVolume: true
     });
     resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
-    PlayerMap.get(guildID)?.player.stop();
     PlayerMap.set(guildID, subscription);
     Player.play(resource);
   } catch (err) {
