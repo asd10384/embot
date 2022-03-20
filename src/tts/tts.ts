@@ -11,6 +11,7 @@ import { set_timer } from "./timer";
 import MDB from "../database/Mongodb";
 import axios from "axios";
 
+export const checktime: Map<string, number> = new Map();
 export const PlayerMap: Map<string, PlayerSubscription | undefined> = new Map();
 export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH.slice(0,-1) : process.env.TTS_FILE_PATH : '';
 export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH.slice(0,-1) : process.env.SIGNATURE_FILE_PATH : '';
@@ -150,7 +151,10 @@ export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, gu
     });
     resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
     PlayerMap.set(guildID, subscription);
-    Player.play(resource);
+    if ((checktime.get(guildID)?checktime.get(guildID)!:0)+50 <= Date.now()) {
+      checktime.set(guildID, Date.now());
+      Player.play(resource);
+    }
   } catch (err) {
     PlayerMap.set(guildID, undefined);
   }
