@@ -50,6 +50,7 @@ export async function restartsignature(): Promise<string> {
   snlist = Object.keys(sncheckobj);
   sncheck = new RegExp(Object.keys(sncheckobj).join('|'), 'gi');
   const getlog = await makefile(sig[0]);
+  console.log(getlog);
   return getlog;
 }
 
@@ -133,6 +134,7 @@ export async function ttsplay(message: M, text: string) {
   const bvcb = await getbotchannelboolen(message);
   set_timer(message.guildId!, true);
   play(vca, message.guildId!, channel.id, file, bvcb, randomfilename).catch((err) => {});
+  return;
 }
 
 export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, guildID: string, channelID: string, fileURL: string, bvcb: boolean, filename: string, options?: { volume?: number }) {
@@ -141,6 +143,11 @@ export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, gu
     guildId: guildID,
     channelId: channelID
   });
+
+  if (!((checktime.get(guildID)?checktime.get(guildID)!:0)+100 <= Date.now())) {
+    checktime.set(guildID, Date.now());
+    return;
+  }
 
   try {
     PlayerMap.get(guildID)?.player.stop();
@@ -151,7 +158,7 @@ export async function play(voiceAdapterCreator: DiscordGatewayAdapterCreator, gu
     });
     resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
     PlayerMap.set(guildID, subscription);
-    if ((checktime.get(guildID)?checktime.get(guildID)!:0)+50 <= Date.now()) {
+    if ((checktime.get(guildID)?checktime.get(guildID)!:0)+100 <= Date.now()) {
       checktime.set(guildID, Date.now());
       Player.play(resource);
     }
