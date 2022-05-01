@@ -6,7 +6,7 @@ import onInteractionCreate from "./events/onInteractionCreate";
 import onMessageCreate from "./events/onMessageCreate";
 import guildDelete from "./events/guildDelete";
 import voiceStateUpdate from "./events/voiceStateUpdate";
-import { restartsignature, ttsfilepath, signaturefilepath } from "./tts/tts";
+import { ttsfilepath, signaturefilepath, restartsignature } from "./tts/tts";
 import { existsSync, mkdirSync, readdir, readdirSync, rmdirSync, unlink, unlinkSync } from "fs";
 
 // 봇 클라이언트 생성

@@ -1,6 +1,7 @@
 import "dotenv/config";
-import { ChatInputApplicationCommandData, Client, ClientEvents, ColorResolvable, EmbedFieldData, Message, MessageEmbed } from 'discord.js';
+import { ChatInputApplicationCommandData, Client, ClientEvents, ColorResolvable, EmbedFieldData, Guild, Message, MessageEmbed } from 'discord.js';
 import _ from '../consts';
+import TTS from "../tts/tts";
  // .env 불러오기
 
 /**
@@ -21,6 +22,7 @@ export default class BotClient extends Client {
   ttstimertime: number;
   embedcolor: ColorResolvable;
   maxqueue: number;
+  ttsClass: Map<string, TTS>;
   /**
    * 클라이언트 생성
    * 
@@ -54,6 +56,7 @@ export default class BotClient extends Client {
     this.ttstimertime = (60) * 45; //분
     this.embedcolor = process.env.EMBED_COLOR ? process.env.EMBED_COLOR.trim().toUpperCase() as ColorResolvable : "ORANGE";
     this.maxqueue = 30;
+    this.ttsClass = new Map();
   }
 
   /**
@@ -104,6 +107,11 @@ export default class BotClient extends Client {
       embed.setColor(this.embedcolor);
     }
     return embed;
+  }
+
+  gettts(guild: Guild): TTS {
+    if (!this.ttsClass.has(guild.id)) this.ttsClass.set(guild.id, new TTS(guild));
+    return this.ttsClass.get(guild.id)!;
   }
 
   help(name: string, metadata: ChatInputApplicationCommandData, msgmetadata?: { name: string, des: string }[]): MessageEmbed | undefined {

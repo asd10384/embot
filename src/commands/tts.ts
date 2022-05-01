@@ -6,9 +6,9 @@ import { Message, MessageActionRow, MessageButton, MessageEmbed } from "discord.
 import MDB from "../database/Mongodb";
 import { ChannelTypes } from "discord.js/typings/enums";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
-import { restartsignature } from "../tts/tts";
 import nowdate from "../function/nowdate";
 import { signaturelist } from "./시그니쳐";
+import { restartsignature } from "../tts/tts";
 
 /**
  * DB
@@ -147,7 +147,7 @@ export default class TtsCommand implements Command {
       return await interaction.editReply({ content: '완료' });
     }
     if (cmdgrp === '시그니쳐') {
-      if (cmd === '목록') return await interaction.editReply({ embeds: await signaturelist() });
+      if (cmd === '목록') return await interaction.editReply({ embeds: await signaturelist(interaction.guild!) });
       if (cmd === "리로드") {
         const log = await restartsignature();
         return await interaction.editReply({ content: `${log}` });
@@ -190,7 +190,7 @@ export default class TtsCommand implements Command {
       return message.channel.send({ content: "채널을 찾을수 없음" }).then(m => client.msgdelete(m, 1));
     }
     if (args[0] === '시그니쳐') {
-      if (args[1] === '목록') return await message.channel.send({ embeds: await signaturelist() }).then(m => client.msgdelete(m, 8));
+      if (args[1] === '목록') return await message.channel.send({ embeds: await signaturelist(message.guild!) }).then(m => client.msgdelete(m, 8));
       if (args[1] === "리로드") {
         await restartsignature();
         return message.channel.send({ content: `시그니쳐를 성공적으로 불러왔습니다.` }).then(m => client.msgdelete(m, 2));

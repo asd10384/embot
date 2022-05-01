@@ -1,5 +1,5 @@
 
-const msgobj: {
+export const replaceobj: {
   [key: string]: string
 } = {
   '\\?': '물음표',
@@ -27,14 +27,7 @@ const msgobj: {
   'ㅇㅎ': '아하'
 };
 let msglist: string[] = [];
-for (let i in msgobj) {
+for (let i in replaceobj) {
   msglist.push(i);
 }
-let msgreg: RegExp = new RegExp(msglist.join('|'), 'gi');
-
-export default function replacemsg(text: string) {
-  text = text.replace(msgreg, (text) => {
-    return (msgobj[text]) ? msgobj[text] : (msgobj['\\'+text]) ? msgobj['\\'+text] : text;
-  });
-  return text;
-};
+export const repalcelist = msglist;

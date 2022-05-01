@@ -1,6 +1,5 @@
 import { client, handler } from "../index";
 import { Message } from 'discord.js';
-import { ttsplay } from "../tts/tts";
 import MDB from "../database/Mongodb";
 
 export default async function onMessageCreate (message: Message) {
@@ -23,7 +22,7 @@ export default async function onMessageCreate (message: Message) {
     const guildDB = await MDB.get.guild(message);
     if (guildDB.tts.channelId === message.channelId) {
       if (guildDB.tts.use) {
-        ttsplay(message, message.content);
+        client.gettts(message.guild!).tts(message, message.content);
       }
     }
   }
