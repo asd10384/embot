@@ -2,8 +2,8 @@ import { client } from "../index";
 import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
-import { Message, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
-import MDB from "../database/Mongodb";
+import { MessageEmbed } from "discord.js";
+import MDB from "../database/Mysql";
 import { ChannelTypes } from "discord.js/typings/enums";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import nowdate from "../function/nowdate";
@@ -225,14 +225,15 @@ export default class TtsCommand implements Command {
   }
 
   async makechannel(message: I | M): Promise<string> {
-    let guildDB = await MDB.get.guild(message);
+    let guildDB = await MDB.get.guild(message.guild!);
+    if (!guildDB) return "생성실패: 데이터베이스 오류";
     const channel = await message.guild?.channels.create('TTS채널', {
       type: 'GUILD_TEXT',
       topic: `봇을 사용한뒤 ${client.prefix}tts leave 명령어를 입력해 내보내 주세요.`
     });
-    guildDB!.tts.channelId = channel?.id!;
-    guildDB!.save();
-    channel?.send({
+    if (!channel) return "생성실패: 채널생성 오류";
+    guildDB.tts.channelId = channel.id;
+    channel.send({
       embeds: [
         client.mkembed({
           title: `TTS채널입니다.`,
@@ -241,7 +242,12 @@ export default class TtsCommand implements Command {
         })
       ]
     });
-    return `<#${channel?.id!}> 생성 완료`;
+    return await MDB.update.guild(guildDB.id, { tts: JSON.stringify(guildDB.tts) }).then((val) => {
+      if (!val) return "생성실패: 데이터베이스 저장 오류";
+      return `<#${channel.id}> 생성 완료`;
+    }).catch((err) => {
+      return "생성실패: 데이터베이스 저장 오류";
+    });
   }
 
   async ban(message: I | M, userId: string, time: number): Promise<MessageEmbed> {
@@ -261,31 +267,43 @@ export default class TtsCommand implements Command {
           inf: (time > 0) ? false : true,
           banforid: message.member!.user.id
         });
-        userDB.save().catch((err) => console.error(err));
-        message.guild?.members.cache.get(userDB.id)?.user.send({
-          embeds: [
-            client.mkembed({
-              author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
-              title: `\` TTS ban \``,
-              description: `
-                \` 당신은 TTS ban 되었습니다. \`
-
-                당신은 ${message.guild.name} 서버에서
-                ${time < 0 ? "무기한" : `${time}초`} 동안
-                TTS 를 사용할수 없습니다.
-
-                ban한사람 : <@${message.member!.user.id}>
-                ban된시간 : ${nowdate()}
-              `,
-              color: "RED"
-            })
-          ]
-        });
-        return client.mkembed({
-          title: `\` TTS ban \``,
-          description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님을 ban 했습니다.\n시간 : ${time < 0 ? "무기한" : `${time}초`}`,
-          color: 'ORANGE'
-        });
+        return await MDB.update.user(userDB.id, { tts: JSON.stringify(userDB.tts) }).then((val) => {
+          if (!val) return client.mkembed({
+            title: `\` 데이터베이스 오류 \``,
+            description: `다시 시도해주세요.`,
+            color: "DARK_RED"
+          });
+          message.guild?.members.cache.get(userDB!.id)?.user.send({
+            embeds: [
+              client.mkembed({
+                author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
+                title: `\` TTS ban \``,
+                description: `
+                  \` 당신은 TTS ban 되었습니다. \`
+  
+                  당신은 ${message.guild.name} 서버에서
+                  ${time < 0 ? "무기한" : `${time}초`} 동안
+                  TTS 를 사용할수 없습니다.
+  
+                  ban한사람 : <@${message.member!.user.id}>
+                  ban된시간 : ${nowdate()}
+                `,
+                color: "RED"
+              })
+            ]
+          });
+          return client.mkembed({
+            title: `\` TTS ban \``,
+            description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님을 ban 했습니다.\n시간 : ${time < 0 ? "무기한" : `${time}초`}`,
+            color: 'ORANGE'
+          });
+        }).catch((err) => {
+          return client.mkembed({
+            title: `\` 데이터베이스 오류 \``,
+            description: `다시 시도해주세요.`,
+            color: "DARK_RED"
+          });
+        })
       } else {
         return client.mkembed({
           title: `\` 데이터베이스 오류 \``,
@@ -308,25 +326,42 @@ export default class TtsCommand implements Command {
       if (userDB) {
         if (userDB.tts.some((ttsDB) => ttsDB.guildId === message.guildId!)) {
           userDB.tts.splice(userDB.tts.findIndex(ttsDB => ttsDB.guildId === message.guildId!), 1);
-          userDB.save().catch((err) => console.error(err));
-          message.guild?.members.cache.get(userDB.id)?.user.send({
-            embeds: [
-              client.mkembed({
-                author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
-                title: `\` TTS unban \``,
-                description: `
-                  \` 당신은 TTS unban 되었습니다. \`
-
-                  당신은 ${message.guild.name} 서버에서
-                  TTS 를 사용할수 있습니다.
-
-                  unban한사람 : <@${message.member!.user.id}>
-                  unban된시간 : ${nowdate()}
-                `,
-                color: "RED"
-              })
-            ]
-          });
+          return await MDB.update.user(userDB.id, { tts: JSON.stringify(userDB.tts) }).then((val) => {
+            if (!val) return client.mkembed({
+              title: `\` 데이터베이스 오류 \``,
+              description: `다시 시도해주세요.`,
+              color: "DARK_RED"
+            });
+            message.guild?.members.cache.get(userDB!.id)?.user.send({
+              embeds: [
+                client.mkembed({
+                  author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
+                  title: `\` TTS unban \``,
+                  description: `
+                    \` 당신은 TTS unban 되었습니다. \`
+  
+                    당신은 ${message.guild.name} 서버에서
+                    TTS 를 사용할수 있습니다.
+  
+                    unban한사람 : <@${message.member!.user.id}>
+                    unban된시간 : ${nowdate()}
+                  `,
+                  color: "RED"
+                })
+              ]
+            });
+            return client.mkembed({
+              title: `\` TTS unban \``,
+              description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님을 unban 했습니다.`,
+              color: 'ORANGE'
+            });
+          }).catch((err) => {
+            return client.mkembed({
+              title: `\` 데이터베이스 오류 \``,
+              description: `다시 시도해주세요.`,
+              color: "DARK_RED"
+            });
+          })
         } else {
           return client.mkembed({
             title: `\` TTS unban 오류 \``,
@@ -334,11 +369,6 @@ export default class TtsCommand implements Command {
             color: "DARK_RED"
           });
         }
-        return client.mkembed({
-          title: `\` TTS unban \``,
-          description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님을 unban 했습니다.`,
-          color: 'ORANGE'
-        });
       } else {
         return client.mkembed({
           title: `\` 데이터베이스 오류 \``,

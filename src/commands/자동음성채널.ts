@@ -2,8 +2,8 @@ import { client } from "../index";
 import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
-import { Message, MessageActionRow, MessageButton, MessageEmbed, VoiceChannel } from "discord.js";
-import MDB from "../database/Mongodb";
+import { MessageEmbed, VoiceChannel } from "discord.js";
+import MDB from "../database/Mysql";
 import { ChannelTypes } from "discord.js/typings/enums";
 
 /**
@@ -118,11 +118,15 @@ export default class 자동음성채널Command implements Command {
 
   async getlist(message: I | M): Promise<MessageEmbed> {
     const embed = client.mkembed({
-      title: `\` 자동음성채널 목록 \``,
-      color: 'ORANGE'
+      title: `\` 자동음성채널 목록 \``
     });
-    const guildDB = await MDB.get.guild(message);
-    guildDB!.autovc.first.forEach((obj) => {
+    const guildDB = await MDB.get.guild(message.guild!);
+    if (!guildDB) return client.mkembed({
+      title: `자동음성채널 오류`,
+      description: `데이터베이스오류`,
+      color: "DARK_RED"
+    });
+    guildDB.autovc.first.forEach((obj) => {
       embed.addField(`<#${obj.categoryID}>`, `<#${obj.channelID}>`, true);
     });
     if (guildDB!.autovc.first.length < 1) embed.addField(`**없음**`, `**없음**`);
@@ -134,24 +138,38 @@ export default class 자동음성채널Command implements Command {
       if (args[1] && message.guild?.channels.cache.some((ch) => ch.id === args[1] && ch.type === "GUILD_CATEGORY")) {
         if (args[2] && parseInt(args[2]) !== NaN) {
           if (parseInt(args[2]) >= 0) {
-            const guildDB = await MDB.get.guild(message);
-            guildDB!.autovc.first.push({
+            const guildDB = await MDB.get.guild(message.guild!);
+            if (!guildDB) return client.mkembed({
+              title: `자동음성채널 오류`,
+              description: `데이터베이스오류`,
+              color: "DARK_RED"
+            });
+            guildDB.autovc.first.push({
               channelID: args[0],
               categoryID: args[1],
               limit: parseInt(args[2])
             });
-            guildDB!.save().catch((err) => console.error(err));
-            return client.mkembed({
-              title: `\` 자동음성채널 추가 \``,
-              description: `
-                앞으로
-                <#${args[0]}>
-                에 들어가면 새로운 음성채널(최대 ${args[2]}명) 이
-                <#${args[1]}>
-                에 생성됩니다.
-              `,
-              footer: { text: `목록: ${(checkcmd) ? "/" : client.prefix}자동음성채널 목록` },
-              color: 'ORANGE'
+            return await MDB.update.guild(guildDB.id, { autovc: JSON.stringify(guildDB.autovc) }).then((val) => {
+              if (!val) return client.mkembed({
+                title: `\` 자동음성채널 추가 오류 \``,
+                color: "DARK_RED"
+              });
+              return client.mkembed({
+                title: `\` 자동음성채널 추가 \``,
+                description: `
+                  앞으로
+                  <#${args[0]}>
+                  에 들어가면 새로운 음성채널(최대 ${args[2]}명) 이
+                  <#${args[1]}>
+                  에 생성됩니다.
+                `,
+                footer: { text: `목록: ${(checkcmd) ? "/" : client.prefix}자동음성채널 목록` }
+              });
+            }).catch((err) => {
+              return client.mkembed({
+                title: `\` 자동음성채널 추가 오류 \``,
+                color: "DARK_RED"
+              });
             });
           }
           return client.mkembed({
@@ -176,15 +194,29 @@ export default class 자동음성채널Command implements Command {
   }
 
   async remove(message: I | M, channel: VoiceChannel, checkcmd: boolean): Promise<MessageEmbed> {
-    const guildDB = await MDB.get.guild(message);
-    if (guildDB!.autovc.first.some((autovcDB) => autovcDB.channelID === channel.id)) {
-      guildDB!.autovc.first.splice(guildDB!.autovc.first.findIndex((autovcDB) => autovcDB.channelID === channel.id), 1);
-      guildDB!.save().catch((err) => console.error(err));
-      return client.mkembed({
-        title: `\` 자동음성채널 제거 \``,
-        description: `<#${channel.id}> 제거 완료`,
-        footer: { text: `목록: ${(checkcmd) ? "/" : client.prefix}자동음성채널 목록` },
-        color: 'ORANGE'
+    const guildDB = await MDB.get.guild(message.guild!);
+    if (!guildDB) return client.mkembed({
+      title: `자동음성채널 오류`,
+      description: `데이터베이스오류`,
+      color: "DARK_RED"
+    });
+    if (guildDB.autovc.first.some((autovcDB) => autovcDB.channelID === channel.id)) {
+      guildDB.autovc.first.splice(guildDB!.autovc.first.findIndex((autovcDB) => autovcDB.channelID === channel.id), 1);
+      return await MDB.update.guild(guildDB.id, { autovc: JSON.stringify(guildDB.autovc) }).then((val) => {
+        if (!val) return client.mkembed({
+          title: `\` 자동음성채널 제거 오류 \``,
+          color: "DARK_RED"
+        });
+        return client.mkembed({
+          title: `\` 자동음성채널 제거 \``,
+          description: `<#${channel.id}> 제거 완료`,
+          footer: { text: `목록: ${(checkcmd) ? "/" : client.prefix}자동음성채널 목록` }
+        });
+      }).catch((err) => {
+        return client.mkembed({
+          title: `\` 자동음성채널 제거 오류 \``,
+          color: "DARK_RED"
+        });
       });
     }
     return client.mkembed({

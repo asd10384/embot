@@ -1,6 +1,6 @@
 import { client, handler } from "../index";
 import { Message } from 'discord.js';
-import MDB from "../database/Mongodb";
+import MDB from "../database/Mysql";
 
 export default async function onMessageCreate (message: Message) {
   if (message.author.bot || message.channel.type === 'DM') return;
@@ -19,8 +19,8 @@ export default async function onMessageCreate (message: Message) {
       client.msgdelete(message, 0);
     }
   } else {
-    const guildDB = await MDB.get.guild(message);
-    if (guildDB.tts.channelId === message.channelId) {
+    const guildDB = await MDB.get.guild(message.guild!);
+    if (guildDB?.tts.channelId === message.channelId) {
       if (guildDB.tts.use) {
         client.gettts(message.guild!).tts(message, message.content);
       }

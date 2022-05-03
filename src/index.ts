@@ -22,17 +22,17 @@ client.onEvent('voiceStateUpdate', voiceStateUpdate);
 
 // TTS 파일 삭제
 if (!existsSync(ttsfilepath)) mkdirSync(ttsfilepath);
-if (!existsSync(signaturefilepath)) mkdirSync(signaturefilepath);
 readdir(ttsfilepath, (err, files) => {
   if (err) console.error(err);
   files.forEach((file) => {
-    unlink(ttsfilepath+file, (err) => {
+    unlink(`${ttsfilepath}/${file}`, (err) => {
       if (err) return;
     });
   });
 });
 
 // 시그니쳐 파일 삭제
+if (!existsSync(signaturefilepath)) mkdirSync(signaturefilepath);
 readdir(signaturefilepath, (err, files) => {
   if (err) console.error(err);
   files.forEach((file) => {

@@ -3,7 +3,7 @@ import "./googlettsapi";
 import { client } from "../index";
 import { Guild } from "discord.js";
 import { M } from "../aliases/discord.js.js";
-import MDB from "../database/Mongodb";
+import MDB from "../database/Mysql";
 import axios from "axios";
 import { makefile, signaturesiteurl } from "./signature";
 import { getsignature } from "./signature";
@@ -110,7 +110,7 @@ export default class TTS {
           }).then(m => client.msgdelete(m, 3));
         } else {
           userDB.tts.splice(userDB.tts.findIndex(ttsDB => ttsDB.guildId === message.guildId!), 1);
-          userDB.save().catch((err) => {});
+          await MDB.update.user(userDB.id, { tts: JSON.stringify(userDB.tts) }).catch((err) => {});
         }
       }
     }

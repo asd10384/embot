@@ -1,9 +1,7 @@
 import { client } from "../index";
-import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
-import { GuildMember, Message, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
-import MDB from "../database/Mongodb";
+import { GuildMember, MessageEmbed } from "discord.js";
 import format_date from "../function/format";
 
 /**
