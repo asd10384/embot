@@ -114,7 +114,7 @@ async function get_guildDB(guild: Guild): Promise<guild_type | undefined> {
         first: [],
         second: []
       })
-    ].join("','")}')`).then((guildDB) => {
+    ].join("','")}')`).then((guildDB): guild_type => {
       return {
         id: guild.id.toString(),
         name: guild.name,
@@ -155,7 +155,7 @@ async function get_userDB(member: GuildMember): Promise<user_type | undefined> {
       member.user.id.toString(),
       member.user.tag,
       "[]"
-    ].join("','")}')`).then((userDB) => {
+    ].join("','")}')`).then((userDB): user_type => {
       return {
         id: member.user.id.toString(),
         tag: member.user.tag,
