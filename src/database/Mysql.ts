@@ -155,7 +155,7 @@ async function get_userDB(member: GuildMember): Promise<user_type | undefined> {
       member.user.id.toString(),
       member.user.tag,
       "[]"
-    ].join("','")}')`).then((userDB: user_first_type) => {
+    ].join("','")}')`).then((userDB) => {
       return {
         id: member.user.id.toString(),
         tag: member.user.tag,
@@ -189,7 +189,7 @@ async function update_userDB(userId: string, data: user_list_type): Promise<bool
   let values = Object.values(data);
   let addlist = [];
   for (let i in keys) {
-    addlist.push(`'${keys[i]}'=${
+    addlist.push(`${keys[i]}=${
       typeof(values[i]) === "string" ? `'${values[i]}'` : values[i]
     }`);
   }

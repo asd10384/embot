@@ -270,7 +270,7 @@ export default class TtsCommand implements Command {
         return await MDB.update.user(userDB.id, { tts: JSON.stringify(userDB.tts) }).then((val) => {
           if (!val) return client.mkembed({
             title: `\` 데이터베이스 오류 \``,
-            description: `다시 시도해주세요.`,
+            description: `다시 시도해주세요.\n(업데이트 오류)`,
             color: "DARK_RED"
           });
           message.guild?.members.cache.get(userDB!.id)?.user.send({
@@ -294,20 +294,19 @@ export default class TtsCommand implements Command {
           });
           return client.mkembed({
             title: `\` TTS ban \``,
-            description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님을 ban 했습니다.\n시간 : ${time < 0 ? "무기한" : `${time}초`}`,
-            color: 'ORANGE'
+            description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님을 ban 했습니다.\n시간 : ${time < 0 ? "무기한" : `${time}초`}`
           });
         }).catch((err) => {
           return client.mkembed({
             title: `\` 데이터베이스 오류 \``,
-            description: `다시 시도해주세요.`,
+            description: `다시 시도해주세요.\n(업데이트 오류)`,
             color: "DARK_RED"
           });
         })
       } else {
         return client.mkembed({
           title: `\` 데이터베이스 오류 \``,
-          description: `다시 시도해주세요.`,
+          description: `다시 시도해주세요.\n(불러오기 오류)`,
           color: "DARK_RED"
         });
       }
@@ -329,7 +328,7 @@ export default class TtsCommand implements Command {
           return await MDB.update.user(userDB.id, { tts: JSON.stringify(userDB.tts) }).then((val) => {
             if (!val) return client.mkembed({
               title: `\` 데이터베이스 오류 \``,
-              description: `다시 시도해주세요.`,
+              description: `다시 시도해주세요.\n(업데이트 오류)`,
               color: "DARK_RED"
             });
             message.guild?.members.cache.get(userDB!.id)?.user.send({
@@ -352,13 +351,12 @@ export default class TtsCommand implements Command {
             });
             return client.mkembed({
               title: `\` TTS unban \``,
-              description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님을 unban 했습니다.`,
-              color: 'ORANGE'
+              description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님을 unban 했습니다.`
             });
           }).catch((err) => {
             return client.mkembed({
               title: `\` 데이터베이스 오류 \``,
-              description: `다시 시도해주세요.`,
+              description: `다시 시도해주세요.\n(업데이트 오류)`,
               color: "DARK_RED"
             });
           })
@@ -372,7 +370,7 @@ export default class TtsCommand implements Command {
       } else {
         return client.mkembed({
           title: `\` 데이터베이스 오류 \``,
-          description: `다시 시도해주세요.`,
+          description: `다시 시도해주세요.\n(불러오기 오류)`,
           color: "DARK_RED"
         });
       }
