@@ -3,26 +3,40 @@ import { Guild, GuildMember } from "discord.js";
 import mysql from "mysql";
 import { client } from "../index.js";
 
-const db = mysql.createConnection({
+const pool = mysql.createPool({
   host: process.env.MYSQL_HOST ? process.env.MYSQL_HOST : 'localhost',
   port: parseInt(process.env.MYSQL_PORT ? process.env.MYSQL_PORT : "3306"),
   user: process.env.MYSQL_USER ? process.env.MYSQL_USER : "root",
   password: process.env.MYSQL_PASSWORD ? process.env.MYSQL_PASSWORD : "",
-  database: process.env.MYSQL_DATABASE ? process.env.MYSQL_DATABASE : ""
+  database: process.env.MYSQL_DATABASE ? process.env.MYSQL_DATABASE : "",
+  waitForConnections: true
 });
-try {
-  db.connect();
-  console.log(`MYSQL 데이터베이스 연결 성공`);
-} catch (err) {
-  if (client.debug) console.log(err);
-  throw "\nMYSQL 데이터베이스 연결 실패";
-}
+
+pool.getConnection((err, connection) => {
+  if (err) {
+    if (client.debug) console.log(err);
+    throw "\nMYSQL 데이터베이스 연결 실패";
+  }
+  console.log(`MYSQL 데이터베이스 연결 확인`);
+  connection.release();
+});
 
 async function command(text: string): Promise<any> {
-  return new Promise((res, rej) => {
-    db.query(text, (err, ret) => {
-      if (err) return rej(err);
-      return res(ret);
+  return new Promise((suc, unsuc) => {
+    pool.getConnection((err, connection) => {
+      if (err) {
+        if (client.debug) console.log(err);
+        throw "\nMYSQL 데이터베이스 연결 실패";
+      }
+      connection.query(text, (err2, res) => {
+        if (err2) {
+          if (client.debug) console.log(err2);
+          throw "\nMYSQL 데이터베이스 연결 실패2";
+        }
+        connection.release();
+        if (err2) return unsuc(err2);
+        return suc(res);
+      });
     });
   });
 }
@@ -51,6 +65,7 @@ export interface guild_type {
   tts: {
     channelId: string;
     use: boolean;
+    length: number;
   },
   autovc: {
     first: { channelID: string, categoryID: string, limit: number }[];
@@ -122,7 +137,8 @@ async function get_guildDB(guild: Guild): Promise<guild_type | undefined> {
         role: [],
         tts: {
           channelId: "",
-          use: true
+          use: true,
+          length: 300
         },
         autovc: {
           first: [],

@@ -53,12 +53,18 @@ export default class TTS {
   ttstimer: NodeJS.Timeout | undefined;
   lasttts: number;
   setPlayerSubscription: PlayerSubscription | undefined;
+  move: boolean;
 
   constructor(guild: Guild) {
     this.guild = guild;
     this.ttstimer = undefined;
     this.lasttts = 0;
     this.setPlayerSubscription = undefined;
+    this.move = true;
+  }
+
+  setmove(getmove: boolean) {
+    this.move = getmove;
   }
 
   async tts(message: M, text: string) {
@@ -160,26 +166,38 @@ export default class TTS {
     return;
   }
   async play(channelID: string, fileURL: string, filename: string, options?: { volume?: number }) {
-    let connection: VoiceConnection = joinVoiceChannel({
-      adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-      guildId: this.guild.id,
-      channelId: channelID
-    });
+    let connection: VoiceConnection | undefined = undefined;
+    if (this.move) {
+      connection = joinVoiceChannel({
+        adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
+        guildId: this.guild.id,
+        channelId: channelID
+      });
+    } else {
+      connection = getVoiceConnection(this.guild.id);
+      if (!connection) connection = joinVoiceChannel({
+        adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
+        guildId: this.guild.id,
+        channelId: channelID
+      });
+    }
+    if (!connection) return;
     
     this.ttstimer = setTimeout(() => {
+      this.move = true;
       getVoiceConnection(this.guild.id)?.disconnect();
     }, 1000 * client.ttstimertime);
   
     try {
       this.setPlayerSubscription?.player.stop();
       const Player = createAudioPlayer();
-      const subscription = connection.subscribe(Player);
       const resource = createAudioResource(fileURL, {
         inlineVolume: true
       });
       resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
-      this.setPlayerSubscription = subscription;
       Player.play(resource);
+      const subscription = connection.subscribe(Player);
+      this.setPlayerSubscription = subscription;
     } catch (err) {
       this.setPlayerSubscription = undefined;
     }
