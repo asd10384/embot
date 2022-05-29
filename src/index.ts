@@ -8,6 +8,7 @@ import guildDelete from "./events/guildDelete";
 import voiceStateUpdate from "./events/voiceStateUpdate";
 import { ttsfilepath, signaturefilepath, restartsignature } from "./tts/tts";
 import { existsSync, mkdirSync, readdir, readdirSync, rmdirSync, unlink, unlinkSync } from "fs";
+import nowdate from "./function/nowdate";
 
 // 봇 클라이언트 생성
 export const client = new BotClient();
@@ -59,7 +60,7 @@ readdir(signaturefilepath, (err, files) => {
 // 시그니쳐 로딩
 console.log("시그니쳐 불러오는중...");
 restartsignature().catch((err) => {
-  return console.log("시그니쳐 불러오던중 오류발생");
+  return console.log("시그니쳐 불러오던중 오류발생\n");
 }).then((val) => {
-  return console.log(val);
+  return console.log(`현재시간: ${nowdate()}\n`);
 });
