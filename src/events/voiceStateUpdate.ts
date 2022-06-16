@@ -15,11 +15,17 @@ async function join(newStats: VoiceState) {
     let name = (newStats.member && newStats.member.nickname) ? newStats.member.nickname : newStats.member?.user.username;
     const channel = await newStats.guild.channels.create(`${name} - 음성채널`, {
       type: 'GUILD_VOICE',
-      bitrate: 96000,
+      bitrate: newStats.channel?.bitrate ?? 96000,
       userLimit: obj.limit,
       parent: obj.categoryID
+    }).catch((err) => {
+      return undefined;
     });
+    if (!channel) return;
+    console.log(1,channel.id);
+    console.log(2,guildDB.autovc.second);
     guildDB.autovc.second.push(channel.id);
+    console.log(3,guildDB.autovc.second);
     return await MDB.update.guild(guildDB.id, { autovc: JSON.stringify(guildDB.autovc) }).then((val) => {
       if (!val) return;
       newStats.member?.voice.setChannel(channel);
