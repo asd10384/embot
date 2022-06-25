@@ -70,7 +70,7 @@ export interface guild_type {
   },
   autovc: {
     first: { channelID: string, categoryID: string, limit: number }[];
-    second: string[];
+    second: { id: string, userId: string }[];
   }
 }
 
