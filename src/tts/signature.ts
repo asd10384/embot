@@ -33,7 +33,7 @@ export async function makefile(snobj: { name: string[], url: string }[]): Promis
       return undefined;
     });
     let num = ((i+1) < 10) ? "0"+(i+1) : i+1;
-    if (getbuf && getbuf.data) {
+    if (getbuf?.data) {
       try {
         writeFileSync(`${signaturefilepath}/${val.url}.mp3`, getbuf.data);
         sucnum+=1;
