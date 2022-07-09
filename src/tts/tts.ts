@@ -10,7 +10,7 @@ import { getsignature } from "./signature";
 import { createAudioPlayer, createAudioResource, DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection } from "@discordjs/voice";
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
-import { repalcelist, replaceobj } from "./replacemsg";
+import { repalcelist, replaceobj, replacetext } from "./replacemsg";
 
 export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH.slice(0,-1) : process.env.TTS_FILE_PATH : '';
 export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH.slice(0,-1) : process.env.SIGNATURE_FILE_PATH : '';
@@ -68,28 +68,7 @@ export default class TTS {
   }
 
   async tts(message: M, text: string) {
-    text = (/https?\:\/\//gi.test(text))
-      ? (/https?\:\/\/(www\.)?youtu/gi.test(text))
-      ? '유튜브 주소'
-      : (/https?\:\/\/(www\.)?twitch\.tv/gi.test(text))
-      ? '트위치 주소'
-      : (/https?\:\/\/(www\.)?(store\.)?steampowered/gi.test(text))
-      ? '스팀 주소'
-      : (/https?\:\/\/(www\.)?naver/gi.test(text))
-      ? '네이버 주소'
-      : (/https?\:\/\/(www\.)?namu\.wiki/gi.test(text))
-      ? '나무위키 주소'
-      : (/https?\:\/\/(www\.)?google\.com/gi.test(text))
-      ? '구글 주소'
-      : '주소'
-      : text;
-    text = text.replace(/<@\!?[(0-9)]{18}>/g, (t) => {
-      const member = this.guild.members.cache.get(t.replace(/[^0-9]/g,''));
-      return (member) ? (member.nickname) ? member.nickname : (member.user) ? member.user.username : '유저' : '유저';
-    });
-    text = text.replace(/\<a?\:.*\:[(0-9)]{18}\>/g, (t) => {
-      return '이모티콘';
-    });
+    text = replacetext(this.guild, text);
     if (message.member) {
       let userDB = await MDB.get.user(message.member);
       if (userDB && userDB.tts.findIndex((ttsDB) => ttsDB.guildId === this.guild.id) > -1) {
