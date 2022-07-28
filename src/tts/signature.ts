@@ -28,7 +28,10 @@ export async function makefile(snobj: { name: string[], url: string }[]): Promis
   for (let i=0; i<snobj.length; i++) {
     let val = snobj[i];
     const args = val.url.trim().split("/");
-    if (args.length > 1) if (!existsSync(`${signaturefilepath}/${args[0]}`)) mkdirSync(`${signaturefilepath}/${args[0]}`);
+    if (args.length > 1) if (!existsSync(`${signaturefilepath}/${args[0]}`)) {
+      mkdirSync(`${signaturefilepath}/${args[0]}`);
+      await client.sleep(100);
+    }
     var getbuf = await axios.get(`${signaturesiteurl}/file/${encodeURI(val.url)}.mp3`, { responseType: "arraybuffer", timeout: 5000 }).catch((err) => {
       return undefined;
     });
