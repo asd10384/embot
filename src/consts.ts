@@ -1,7 +1,6 @@
-import { GatewayIntentBits } from 'discord.js';
 import "dotenv/config";
+import { GatewayIntentBits } from 'discord.js';
 import { join } from "path";
-
 
 /** 상수목록 */
 export default class Consts {
@@ -20,7 +19,8 @@ export default class Consts {
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildIntegrations,
-    GatewayIntentBits.GuildMessageTyping
+    GatewayIntentBits.GuildMessageTyping,
+    GatewayIntentBits.MessageContent
     /* 권한을 이곳에 추가 */
   ];
 
