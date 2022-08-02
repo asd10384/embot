@@ -1,5 +1,5 @@
 import { client } from '../index';
-import { ApplicationCommandData, Collection, CommandInteraction, Message } from 'discord.js';
+import { ApplicationCommandData, Collection, Message } from 'discord.js';
 import { readdirSync } from 'fs';
 import _ from '../consts';
 import BotClient from './BotClient';
@@ -53,7 +53,7 @@ export default class SlashHandler {
       client.mkembed({
         description: `\` ${commandName} \` 이라는 명령어를 찾을수 없습니다.`,
         footer: { text: ` ${client.prefix}help 를 입력해 명령어를 확인해주세요.` },
-        color: "DARK_RED"
+        color: "DarkRed"
       })
     ] }).then(m => client.msgdelete(m, 1));
   }

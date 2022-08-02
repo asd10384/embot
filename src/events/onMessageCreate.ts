@@ -1,9 +1,9 @@
 import { client, handler } from "../index";
-import { Message } from 'discord.js';
+import { ChannelType, Message } from 'discord.js';
 import MDB from "../database/Mysql";
 
 export default async function onMessageCreate (message: Message) {
-  if (message.author.bot || message.channel.type === 'DM') return;
+  if (message.author.bot || message.channel.type === ChannelType.DM) return;
   if (message.content.startsWith(client.prefix)) {
     const content = message.content.slice(client.prefix.length).trim();
     const args = content.split(/ +/g);

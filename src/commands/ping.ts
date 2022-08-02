@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
 import { I, D, B } from "../aliases/discord.js";
-import { Message, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
+import { Message, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle, ActionRow, MessageActionRowComponent, ActionRowComponent } from "discord.js";
 
 /**
  * DB
@@ -18,8 +18,8 @@ export default class PingCommand implements Command {
   visible = true;
   description = "PONG!";
   information = "핑 확인";
-  aliases = [ "핑" ];
-  metadata = <D>{
+  aliases: string[] = [ "핑" ];
+  metadata: D = {
     name: this.name,
     description: this.description
   };
@@ -36,12 +36,12 @@ export default class PingCommand implements Command {
     return await interaction.editReply(this.ping());
   }
 
-  ping(): { embeds: [ MessageEmbed ], components: [ MessageActionRow ] } {
-    const actionRow = new MessageActionRow().addComponents(
-      new MessageButton()
+  ping(): { embeds: [ EmbedBuilder ], components: [ ActionRowBuilder<ButtonBuilder> ] } {
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
         .setCustomId("ping-restart")
         .setLabel("다시 측정")
-        .setStyle("SUCCESS")
+        .setStyle(ButtonStyle.Success)
     );
     const embed = client.mkembed({
       title: `Pong!`,

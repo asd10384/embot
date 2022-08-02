@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js.js";
-import { Message, MessageEmbed } from "discord.js";
+import { Message, EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 
 /**
  * DB
@@ -18,12 +18,12 @@ export default class 나무위키Command implements Command {
   visible = true;
   description = "나무위키 검색";
   information = "나무위키 검색";
-  aliases = [  ];
-  metadata = <D>{
+  aliases: string[] = [  ];
+  metadata: D = {
     name: this.name,
     description: this.description,
     options: [{
-      type: "STRING",
+      type: ApplicationCommandOptionType.String,
       name: "검색",
       description: "나무위키에 검색할 이름",
       required: true
@@ -33,16 +33,16 @@ export default class 나무위키Command implements Command {
 
   /** 실행되는 부분 */
   async slashrun(interaction: I) {
-    return await interaction.editReply({ embeds: [ this.search(interaction.options.getString("검색", true)) ] });
+    return await interaction.editReply({ embeds: [ this.search(interaction.options.get("검색", true).value as string) ] });
   }
   async msgrun(message: Message, args: string[]) {
     return message.channel.send({ embeds: [ this.search(args[0]) ] }).then(m => client.msgdelete(m, 3));
   }
 
-  search(text: string | undefined): MessageEmbed {
+  search(text: string | undefined): EmbedBuilder {
     if (!text || text.length === 0) return client.mkembed({
       title: "검색할 내용을 적어주세요.",
-      color: "DARK_RED"
+      color: "DarkRed"
     });
     return client.mkembed({
       title: `**\` ${text} \`**`,

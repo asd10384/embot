@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
-import { GuildMember, MessageEmbed } from "discord.js";
+import { GuildMember, EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import format_date from "../function/format";
 
 /**
@@ -20,12 +20,12 @@ export default class UserCommand implements Command {
   visible = true;
   description = "user";
   information = "유저 정보확인";
-  aliases = [ "user" ];
-  metadata = <D>{
+  aliases: string[] = [ "user" ];
+  metadata: D = {
     name: this.name,
     description: this.description,
     options: [{
-      type: 'USER',
+      type: ApplicationCommandOptionType.User,
       name: '유저',
       description: '확인하고싶은 유저 입력',
       required: true
@@ -46,11 +46,11 @@ export default class UserCommand implements Command {
     }
   }
 
-  help(): MessageEmbed {
+  help(): EmbedBuilder {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
 
-  user(message: I | M, member: GuildMember): MessageEmbed {
+  user(message: I | M, member: GuildMember): EmbedBuilder {
     var roles: string = "";
     member?.roles.cache.forEach((role) => {
       if (role && role.name) roles += role.name + '\n';
@@ -71,8 +71,7 @@ export default class UserCommand implements Command {
 
         \` 역할 \`
         ${roles}
-      `,
-      color: 'ORANGE'
+      `
     });
   }
 }

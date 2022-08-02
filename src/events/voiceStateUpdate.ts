@@ -1,5 +1,5 @@
 import { client } from "../index";
-import { OverwriteResolvable, VoiceChannel, VoiceState } from 'discord.js';
+import { ChannelType, VoiceState } from 'discord.js';
 import MDB from "../database/Mysql";
 
 export default function voiceStateUpdate (oldStats: VoiceState, newStats: VoiceState) {
@@ -15,8 +15,9 @@ async function join(newStats: VoiceState) {
     let name = (newStats.member && newStats.member.nickname) ? newStats.member.nickname : newStats.member?.user.username;
     let id = newStats.member!.id;
     let roles = guildDB.role
-    const channel = await newStats.guild.channels.create(`${name} - 음성채널`, {
-      type: 'GUILD_VOICE',
+    const channel = await newStats.guild.channels.create({
+      name: `${name} - 음성채널`,
+      type: ChannelType.GuildVoice,
       bitrate: newStats.channel?.bitrate ?? 96000,
       userLimit: obj.limit,
       parent: obj.categoryID

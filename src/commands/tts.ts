@@ -2,9 +2,8 @@ import { client } from "../index";
 import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
-import { MessageEmbed } from "discord.js";
+import { ApplicationCommandOptionType, ChannelType, EmbedBuilder } from "discord.js";
 import MDB from "../database/Mysql";
-import { ChannelTypes } from "discord.js/typings/enums";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import nowdate from "../function/nowdate";
 import { signaturelist } from "./시그니쳐";
@@ -26,67 +25,67 @@ export default class TtsCommand implements Command {
   visible = true;
   description = "text to speach";
   information = "TTS 명령어";
-  aliases = [ "ㅅㅅㄴ" ];
-  metadata = <D>{
+  aliases: string[] = [ "ㅅㅅㄴ" ];
+  metadata: D = {
     name: this.name,
     description: this.description,
     options: [
       {
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         name: '채널생성',
         description: 'tts채널 생성',
       },
       {
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         name: 'leave',
         description: '봇을 음성에서 내보내기'
       },
       {
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         name: 'join',
         description: '봇을 음성에 참가시키기',
         options: [{
-          type: 'CHANNEL',
+          type: ApplicationCommandOptionType.Channel,
           name: 'join_channel',
           description: '참가시킬채널',
-          channel_types: [ ChannelTypes.GUILD_VOICE, ChannelTypes.GUILD_STAGE_VOICE ],
+          channel_types: [ ChannelType.GuildVoice, ChannelType.GuildStageVoice ],
           required: true
         }]
       },
       {
-        type: 'SUB_COMMAND_GROUP',
+        type: ApplicationCommandOptionType.SubcommandGroup,
         name: '시그니쳐',
         description: '시그니쳐 관련',
         options: [
           {
-            type: 'SUB_COMMAND',
+            type: ApplicationCommandOptionType.Subcommand,
             name: '목록',
             description: '시그니쳐 확인'
           },
           {
-            type: "SUB_COMMAND",
+            type: ApplicationCommandOptionType.Subcommand,
             name: "리로드",
             description: "시그니쳐 다시 불러오기"
           }
         ]
       },
       {
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         name: 'ban',
         description: '유저 ban',
         options: [{
-          type: 'USER',
+          type: ApplicationCommandOptionType.User,
           name: '유저',
           description: '유저',
           required: true
         }]
       },
       {
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         name: 'unban',
         description: '유저 unban',
         options: [{
-          type: 'USER',
+          type: ApplicationCommandOptionType.User,
           name: '유저',
           description: '유저',
           required: true
@@ -127,18 +126,21 @@ export default class TtsCommand implements Command {
 
   /** 실행되는 부분 */
   async slashrun(interaction: I) {
-    const cmdgrp = interaction.options.getSubcommandGroup(false);
-    const cmd = interaction.options.getSubcommand(false);
-    if (cmd === '채널생성') {
+    const cmd = interaction.options.data[0];
+    if (cmd.name === '채널생성') {
       if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
       return await interaction.editReply({ content: await this.makechannel(interaction) });
     }
-    if (cmd === 'leave') {
+    if (cmd.name === 'leave') {
       getVoiceConnection(interaction.guildId!)?.disconnect();
       return await interaction.editReply({ content: '완료' });
     }
-    if (cmd === 'join') {
-      const join_channel = interaction.options.getChannel('join_channel', true);
+    if (cmd.name === 'join') {
+      const join_channel = cmd.options ? cmd.options[0]?.channel : undefined;
+      if (!join_channel || (join_channel.type !== ChannelType.GuildVoice && join_channel.type !== ChannelType.GuildStageVoice)) return await interaction.editReply({ embeds: [ client.mkembed({
+        title: `음성채널을 찾을수없음`,
+        color: "DarkRed"
+      }) ] });
       joinVoiceChannel({
         adapterCreator: interaction.guild!.voiceAdapterCreator! as DiscordGatewayAdapterCreator,
         channelId: join_channel.id,
@@ -146,19 +148,19 @@ export default class TtsCommand implements Command {
       });
       return await interaction.editReply({ content: '완료' });
     }
-    if (cmdgrp === '시그니쳐') {
-      if (cmd === '목록') return await interaction.editReply({ embeds: await signaturelist(interaction.guild!) });
-      if (cmd === "리로드") {
+    if (cmd.name === '시그니쳐') {
+      if (cmd.options && cmd.options[0]?.name === '목록') return await interaction.editReply({ embeds: await signaturelist(interaction.guild!) });
+      if (cmd.options && cmd.options[0]?.name === "리로드") {
         const log = await restartsignature();
         return await interaction.editReply({ content: `${log}` });
       }
     }
-    if (cmd === 'ban') {
+    if (cmd.name === 'ban') {
       if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
       const user = interaction.options.getUser("유저", true);
       return await interaction.editReply({ embeds: [ await this.ban(interaction, user.id, -1) ] });
     }
-    if (cmd === 'unban') {
+    if (cmd.name === 'unban') {
       if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
       const user = interaction.options.getUser("유저", true);
       return await interaction.editReply({ embeds: [ await this.unban(interaction, user.id) ] });
@@ -220,15 +222,16 @@ export default class TtsCommand implements Command {
     return message.channel.send({ embeds: [ this.help() ] }).then(m => client.msgdelete(m, 4));
   }
 
-  help(): MessageEmbed {
+  help(): EmbedBuilder {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
 
   async makechannel(message: I | M): Promise<string> {
     let guildDB = await MDB.get.guild(message.guild!);
     if (!guildDB) return "생성실패: 데이터베이스 오류";
-    const channel = await message.guild?.channels.create('TTS채널', {
-      type: 'GUILD_TEXT',
+    const channel = await message.guild?.channels.create({
+      name: 'TTS채널',
+      type: ChannelType.GuildText,
       topic: `봇을 사용한뒤 ${client.prefix}tts leave 명령어를 입력해 내보내 주세요.`
     });
     if (!channel) return "생성실패: 채널생성 오류";
@@ -237,8 +240,7 @@ export default class TtsCommand implements Command {
       embeds: [
         client.mkembed({
           title: `TTS채널입니다.`,
-          description: `**음성채널에 들어가신 뒤\n이곳에 채팅을 입력하시면\n봇( <@${client.user?.id}> )이 음성에\n들어와 채팅을 읽어줍니다.**`,
-          color: 'ORANGE'
+          description: `**음성채널에 들어가신 뒤\n이곳에 채팅을 입력하시면\n봇( <@${client.user?.id}> )이 음성에\n들어와 채팅을 읽어줍니다.**`
         })
       ]
     });
@@ -250,7 +252,7 @@ export default class TtsCommand implements Command {
     });
   }
 
-  async ban(message: I | M, userId: string, time: number): Promise<MessageEmbed> {
+  async ban(message: I | M, userId: string, time: number): Promise<EmbedBuilder> {
     const member = message.guild?.members.cache.get(userId);
     if (member) {
       let userDB = await MDB.get.user(member);
@@ -258,7 +260,7 @@ export default class TtsCommand implements Command {
         if (userDB.tts.some((ttsDB) => ttsDB.guildId === message.guildId!)) return client.mkembed({
           title: `\` TTS ban 오류 \``,
           description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님은 이미 ban 되어있습니다.`,
-          color: "DARK_RED"
+          color: "DarkRed"
         });
         userDB.tts.push({
           guildId: message.guildId!,
@@ -271,7 +273,7 @@ export default class TtsCommand implements Command {
           if (!val) return client.mkembed({
             title: `\` 데이터베이스 오류 \``,
             description: `다시 시도해주세요.\n(업데이트 오류)`,
-            color: "DARK_RED"
+            color: "DarkRed"
           });
           message.guild?.members.cache.get(userDB!.id)?.user.send({
             embeds: [
@@ -288,7 +290,7 @@ export default class TtsCommand implements Command {
                   ban한사람 : <@${message.member!.user.id}>
                   ban된시간 : ${nowdate()}
                 `,
-                color: "RED"
+                color: "Red"
               })
             ]
           });
@@ -300,25 +302,25 @@ export default class TtsCommand implements Command {
           return client.mkembed({
             title: `\` 데이터베이스 오류 \``,
             description: `다시 시도해주세요.\n(업데이트 오류)`,
-            color: "DARK_RED"
+            color: "DarkRed"
           });
         })
       } else {
         return client.mkembed({
           title: `\` 데이터베이스 오류 \``,
           description: `다시 시도해주세요.\n(불러오기 오류)`,
-          color: "DARK_RED"
+          color: "DarkRed"
         });
       }
     } else {
       return client.mkembed({
         title: `\` TTS ban 오류 \``,
         description: `유저를 찾을수 없습니다.`,
-        color: "DARK_RED"
+        color: "DarkRed"
       });
     }
   }
-  async unban(message: I | M, userId: string): Promise<MessageEmbed> {
+  async unban(message: I | M, userId: string): Promise<EmbedBuilder> {
     const member = message.guild?.members.cache.get(userId);
     if (member) {
       let userDB = await MDB.get.user(member);
@@ -329,7 +331,7 @@ export default class TtsCommand implements Command {
             if (!val) return client.mkembed({
               title: `\` 데이터베이스 오류 \``,
               description: `다시 시도해주세요.\n(업데이트 오류)`,
-              color: "DARK_RED"
+              color: "DarkRed"
             });
             message.guild?.members.cache.get(userDB!.id)?.user.send({
               embeds: [
@@ -345,7 +347,7 @@ export default class TtsCommand implements Command {
                     unban한사람 : <@${message.member!.user.id}>
                     unban된시간 : ${nowdate()}
                   `,
-                  color: "RED"
+                  color: "Red"
                 })
               ]
             });
@@ -357,28 +359,28 @@ export default class TtsCommand implements Command {
             return client.mkembed({
               title: `\` 데이터베이스 오류 \``,
               description: `다시 시도해주세요.\n(업데이트 오류)`,
-              color: "DARK_RED"
+              color: "DarkRed"
             });
           })
         } else {
           return client.mkembed({
             title: `\` TTS unban 오류 \``,
             description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님은 이미 unban 되어있습니다.`,
-            color: "DARK_RED"
+            color: "DarkRed"
           });
         }
       } else {
         return client.mkembed({
           title: `\` 데이터베이스 오류 \``,
           description: `다시 시도해주세요.\n(불러오기 오류)`,
-          color: "DARK_RED"
+          color: "DarkRed"
         });
       }
     } else {
       return client.mkembed({
         title: `\` TTS ban 오류 \``,
         description: `유저를 찾을수 없습니다.`,
-        color: "DARK_RED"
+        color: "DarkRed"
       });
     }
   }

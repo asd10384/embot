@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js";
-import { MessageEmbed } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import { getVoiceConnection } from "@discordjs/voice";
 
 /**
@@ -20,8 +20,8 @@ export default class ExampleCommand implements Command {
   visible = true;
   description = "tts leave";
   information = "tts leave";
-  aliases = [];
-  metadata = <D>{
+  aliases: string[] = [];
+  metadata: D = {
     name: this.name,
     description: this.description
   };
@@ -37,7 +37,7 @@ export default class ExampleCommand implements Command {
     return;
   }
 
-  help(): MessageEmbed {
+  help(): EmbedBuilder {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
 }

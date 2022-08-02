@@ -2,7 +2,7 @@ import { client } from "../index";
 import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
-import { Guild, GuildMember, Message, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
+import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChannelType } from "discord.js";
 import MDB from "../database/Mysql";
 
 /**
@@ -22,11 +22,11 @@ export default class ExampleCommand implements Command {
   description = "내가제작한 자동음성채널의 이름변경";
   information = "내가제작한 자동음성채널의 이름변경";
   aliases = [];
-  metadata = <D>{
+  metadata: D = {
     name: this.name,
     description: this.description,
     options: [{
-      type: "STRING",
+      type: ApplicationCommandOptionType.String,
       name: "채널이름",
       description: "내가제작한 자동음성채널의 변경할이름",
       required: true
@@ -36,7 +36,7 @@ export default class ExampleCommand implements Command {
 
   /** 실행되는 부분 */
   async slashrun(interaction: I) {
-    return await interaction.editReply({ embeds: [ await this.change(interaction, interaction.options.getString("채널이름", true)) ] });
+    return await interaction.editReply({ embeds: [ await this.change(interaction, interaction.options.get("채널이름", true).value as string) ] });
   }
   async msgrun(message: M, args: string[]) {
     if (args[0]) return message.channel.send({ embeds: [ await this.change(message, args.join(" ")) ] }).then(m => client.msgdelete(m, 3));
@@ -44,21 +44,21 @@ export default class ExampleCommand implements Command {
       client.mkembed({
         title: `명령어`,
         description: `${client.prefix}채널이름 [변경할채널명]`,
-        color: "DARK_RED"
+        color: "DarkRed"
       })
     ] }).then(m => client.msgdelete(m, 1));
   }
 
-  help(): MessageEmbed {
+  help(): EmbedBuilder {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
 
-  async change(message: I | M, changeChannelName: string): Promise<MessageEmbed> {
+  async change(message: I | M, changeChannelName: string): Promise<EmbedBuilder> {
     const guildDB = await MDB.get.guild(message.guild!);
     if (!guildDB) return client.mkembed({
       title: `데이터베이스를 찾을수없음`,
       description: `다시시도해주세요.`,
-      color: "DARK_RED"
+      color: "DarkRed"
     });
     const member = message.member instanceof GuildMember
       ? message.member
@@ -66,14 +66,14 @@ export default class ExampleCommand implements Command {
     if (!member) return client.mkembed({
       title: `유저를 찾을수없음`,
       description: `유저를 찾을수 없음`,
-      color: "DARK_RED"
+      color: "DarkRed"
     });
     if (!guildDB.autovc.second.some((autovcDB) => autovcDB.userId === member.id)) return client.mkembed({
       title: `자동음성채널을 찾을수없음`,
       description: `<@${member.id}> 님이 만드신 자동음성채널이 없습니다.`,
-      color: "DARK_RED"
+      color: "DarkRed"
     });
-    const voicechannel = member.voice.channel?.type === "GUILD_VOICE"
+    const voicechannel = member.voice.channel?.type === ChannelType.GuildVoice
       ? member.voice.channel
       : undefined;
     if (
@@ -82,7 +82,7 @@ export default class ExampleCommand implements Command {
     ) return client.mkembed({
       title: `음성채널을 찾을수없음`,
       description: `제작한 자동음성채널의 음성에 들어간뒤 사용해주세요.`,
-      color: "DARK_RED"
+      color: "DarkRed"
     });
     const prename = voicechannel.name;
     voicechannel.setName(changeChannelName);

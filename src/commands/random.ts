@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
-import { MessageEmbed } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 
 /**
  * DB
@@ -19,33 +19,33 @@ export default class ExampleCommand implements Command {
   visible = true;
   description = "랜덤으로 숫자뽑기";
   information = "랜덤으로 숫자뽑기";
-  aliases = [ "random" ];
-  metadata = <D>{
+  aliases: string[] = [ "random" ];
+  metadata: D = {
     name: this.name,
     description: this.description,
     options: [
       {
-        type: "SUB_COMMAND",
+        type: ApplicationCommandOptionType.Subcommand,
         name: "주사위",
         description: "1~6중 랜덤"
       },
       {
-        type: "SUB_COMMAND",
+        type: ApplicationCommandOptionType.Subcommand,
         name: "최대입력",
         description: "0~입력한숫자중 랜덤",
         options: [{
-          type: "NUMBER",
+          type: ApplicationCommandOptionType.Number,
           name: "입력",
           description: "최대숫자 입력",
           required: true
         }]
       },
       {
-        type: "SUB_COMMAND",
+        type: ApplicationCommandOptionType.Subcommand,
         name: "최소최대입력",
         description: "입력한최소숫자~입력한최대숫자중 랜덤",
         options: [{
-          type: "STRING",
+          type: ApplicationCommandOptionType.String,
           name: "입력",
           description: "최소숫자입력/최대숫자입력",
           required: true
@@ -70,18 +70,18 @@ export default class ExampleCommand implements Command {
 
   /** 실행되는 부분 */
   async slashrun(interaction: I) {
-    const cmd = interaction.options.getSubcommand();
-    if (cmd === "주사위") return await interaction.editReply({ embeds: [ this.dice() ] });
-    if (cmd === "최대입력") return await interaction.editReply({ embeds: [ this.max(interaction.options.getNumber("입력", true)) ] });
-    if (cmd === "최소최대입력") {
-      const get = interaction.options.getString("입력", true).replace(/ +/g,"").split("/");
+    const cmd = interaction.options.data[0];
+    if (cmd.name === "주사위") return await interaction.editReply({ embeds: [ this.dice() ] });
+    if (cmd.name === "최대입력") return await interaction.editReply({ embeds: [ this.max(interaction.options.get("입력", true).value as number) ] });
+    if (cmd.name === "최소최대입력") {
+      const get = (interaction.options.get("입력", true).value as string).replace(/ +/g,"").split("/");
       if (get.length < 2) return await interaction.editReply({ embeds: [ client.mkembed({
         title: `최소숫자입력/최대숫자입력`,
-        color: "DARK_RED"
+        color: "DarkRed"
       }) ] });
       if (parseInt(get[0]) === NaN || parseInt(get[1]) === NaN) return await interaction.editReply({ embeds: [ client.mkembed({
         title: `숫자를 입력해주세요.`,
-        color: "DARK_RED"
+        color: "DarkRed"
       }) ] });
       return await interaction.editReply({ embeds: [ this.set(parseInt(get[0]), parseInt(get[1])) ] });
     }
@@ -92,13 +92,13 @@ export default class ExampleCommand implements Command {
       if (parseInt(args[0]) === NaN) return message.channel.send({ embeds: [ client.mkembed({
         title: `\` 숫자를 입력해주세요. \``,
         description: `${client.prefix}랜덤 [숫자] <- 오류`,
-        color: "DARK_RED"
+        color: "DarkRed"
       }) ] }).then(m => client.msgdelete(m, 1));
       if (args[1]) {
         if (parseInt(args[1]) === NaN) return message.channel.send({ embeds: [ client.mkembed({
           title: `\` 숫자를 입력해주세요. \``,
           description: `${client.prefix}랜덤 [숫자] [숫자] <- 오류`,
-          color: "DARK_RED"
+          color: "DarkRed"
         }) ] }).then(m => client.msgdelete(m, 1));
         return message.channel.send({ embeds: [ this.set(parseInt(args[0]), parseInt(args[1])) ] }).then(m => client.msgdelete(m, 4));
       }
@@ -114,25 +114,25 @@ export default class ExampleCommand implements Command {
     }) ] }).then(m => client.msgdelete(m, 5));
   }
 
-  help(): MessageEmbed {
+  help(): EmbedBuilder {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
 
-  dice(): MessageEmbed {
+  dice(): EmbedBuilder {
     return client.mkembed({
       title: `**🎲 주사위**`,
       description: `**${changenum(random(6, 1))}**`
     });
   }
 
-  max(maxnumber: number): MessageEmbed {
+  max(maxnumber: number): EmbedBuilder {
     return client.mkembed({
       title: `**0 ~ ${maxnumber} 랜덤**`,
       description: `**${changenum(random(maxnumber, 0))}**`
     });
   }
 
-  set(minnumber: number, maxnumber: number): MessageEmbed {
+  set(minnumber: number, maxnumber: number): EmbedBuilder {
     return client.mkembed({
       title: `**${minnumber} ~ ${maxnumber} 랜덤**`,
       description: `**${changenum(random(maxnumber, minnumber))}**`

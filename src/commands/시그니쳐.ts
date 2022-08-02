@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
 import { I, D, M } from "../aliases/discord.js.js";
-import { Guild, MessageEmbed } from "discord.js";
+import { Guild, EmbedBuilder } from "discord.js";
 import { snobj } from "../tts/tts";
 
 /**
@@ -20,8 +20,8 @@ export default class 시그니쳐Command implements Command {
   visible = true;
   description = "시그니쳐 목록";
   information = "시그니쳐 목록";
-  aliases = [ "signature" ];
-  metadata = <D>{
+  aliases: string[] = [ "signature" ];
+  metadata: D = {
     name: this.name,
     description: this.description
   };
@@ -35,34 +35,31 @@ export default class 시그니쳐Command implements Command {
     return message.channel.send({ embeds: await signaturelist(message.guild!) }).then(m => client.msgdelete(m, 5));
   }
 
-  help(): MessageEmbed {
+  help(): EmbedBuilder {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
 }
 
 
-export async function signaturelist(guild: Guild): Promise<MessageEmbed[]> {
+export async function signaturelist(guild: Guild): Promise<EmbedBuilder[]> {
   let max = 20;
   const tts = client.gettts(guild);
   let page = Math.ceil(snobj.length / 20);
-  let embedlist: MessageEmbed[] = [
+  let embedlist: EmbedBuilder[] = [
     client.mkembed({
       title: `**시그니쳐 목록** [ 1/${page} ]`,
-      description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`,
-      color: 'ORANGE'
+      description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`
     })
   ];
   snobj.forEach((obj, i) => {
     if (!embedlist[Math.floor(i / max)]) embedlist[Math.floor(i / max)] = client.mkembed({
-      title: `**시그니쳐 목록** [ ${Math.floor(i / max) + 1}/${page} ]`,
-      color: 'ORANGE'
+      title: `**시그니쳐 목록** [ ${Math.floor(i / max) + 1}/${page} ]`
     }) 
-    embedlist[Math.floor(i / max)].addField(`**${obj.url.replace(/.+\//g, '')}**`, `- ${obj.name.join('\n- ')}`, true);
+    embedlist[Math.floor(i / max)].addFields([{ name: `**${obj.url.replace(/.+\//g, '')}**`, value: `- ${obj.name.join('\n- ')}`, inline: true }]);
   });
   embedlist.push(
     client.mkembed({
-      description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`,
-      color: 'ORANGE'
+      description: `**진한 글씨 밑에있는 문구를 입력해\n시그니쳐를 사용할수 있습니다.**`
     })
   );
   return embedlist;

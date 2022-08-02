@@ -89,7 +89,7 @@ export default class TTS {
                   ban한사람 : <@${ttsDB.banforid}>
                   ban된시간 : ${ttsDB.date}
                 `,
-                color: 'DARK_RED'
+                color: 'DarkRed'
               })
             ]
           }).then(m => client.msgdelete(m, 3));
@@ -99,13 +99,13 @@ export default class TTS {
         }
       }
     }
-    const channel = this.getchannel(message);
+    const channel = await this.getchannel(message);
     if (!channel) return message.channel.send({
       embeds: [
         client.mkembed({
           title: `음성채널을 찾을수 없습니다.`,
           description: `음성채널에 들어간 다음 사용해주세요.`,
-          color: 'DARK_RED'
+          color: 'DarkRed'
         })
       ]
     }).then(m => client.msgdelete(m, 1));
@@ -115,7 +115,7 @@ export default class TTS {
         client.mkembed({
           title: `너무많은글자`,
           description: `최대 300자까지 가능합니다.`,
-          color: 'DARK_RED'
+          color: 'DarkRed'
         })
       ]
     }).then(m => client.msgdelete(m, 1));
@@ -191,13 +191,15 @@ export default class TTS {
     return;
   }
 
-  getchannel(message: M) {
-    if (message.member?.voice.channelId) return message.member.voice.channel;
-    if (message.guild?.me?.voice.channelId) return message.guild?.me?.voice.channel;
+  async getchannel(message: M) {
+    if (message.member?.voice.channel) return message.member.voice.channel;
+    const bot = await message.guild?.members.fetchMe({ cache: true });
+    if (bot?.voice.channel) return bot.voice.channel;
     return undefined;
   }
-  getbotchannelboolen(message: M) {
-    if (message.guild?.me?.voice.channelId) return true;
+  async getbotchannelboolen(message: M) {
+    const bot = await message.guild?.members.fetchMe({ cache: true });
+    if (bot?.voice.channel) return true;
     return false;
   }
 

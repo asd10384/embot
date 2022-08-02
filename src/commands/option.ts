@@ -2,7 +2,7 @@ import { client } from "../index";
 import { check_permission as ckper, embed_permission as emper } from "../function/permission";
 import { Command } from "../interfaces/Command";
 import { I, D } from "../aliases/discord.js.js";
-import { Guild, Message, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
+import { Guild, EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import MDB from "../database/Mysql";
 
 /**
@@ -21,27 +21,27 @@ export default class OptionCommand implements Command {
   visible = true;
   description = "설정";
   information = "설정";
-  aliases = [];
-  metadata = <D>{
+  aliases: string[] = [  ];
+  metadata: D = {
     name: this.name,
     description: this.description,
     options: [
       {
-        type: "SUB_COMMAND",
+        type: ApplicationCommandOptionType.Subcommand,
         name: "set-tts-length",
         description: "TTS 글자수 제한 설정",
         options: [{
-          type: "NUMBER",
+          type: ApplicationCommandOptionType.Number,
           name: "글자길이",
           description: "TTS 최대 글자수"
         }]
       },
       {
-        type: "SUB_COMMAND",
+        type: ApplicationCommandOptionType.Subcommand,
         name: "set-tts-move",
         description: "TTS 음성이동 제한",
         options: [{
-          type: "BOOLEAN",
+          type: ApplicationCommandOptionType.Boolean,
           name: "선택",
           description: "TRUE or FALSE"
         }]
@@ -52,30 +52,30 @@ export default class OptionCommand implements Command {
 
   /** 실행되는 부분 */
   async slashrun(interaction: I) {
-    const cmd = interaction.options.getSubcommand();
-    if (cmd === "set-tts-length") return await interaction.editReply({ embeds: [ await this.setttslength(interaction.guild!, interaction.options.getNumber("글자길이")) ] });
-    if (cmd === "set-tts-move") return await interaction.editReply({ embeds: [ await this.setttsmove(interaction.guild!, interaction.options.getBoolean("선택")) ] });
+    const cmd = interaction.options.data[0];
+    if (cmd.name === "set-tts-length") return await interaction.editReply({ embeds: [ await this.setttslength(interaction.guild!, cmd.options ? cmd.options[0]?.value as number : null) ] });
+    if (cmd.name === "set-tts-move") return await interaction.editReply({ embeds: [ await this.setttsmove(interaction.guild!, cmd.options ? cmd.options[0]?.value as boolean : null) ] });
   }
   // async msgrun(message: Message, args: string[]) {
   //   return message.channel.send({ embeds: [
   //     client.mkembed({
   //       title: `/option`,
   //       description: `명령어를 사용해주세요.`,
-  //       color: "DARK_RED"
+  //       color: "DarkRed"
   //     })
   //   ] }).then(m => client.msgdelete(m, 1));
   // }
 
-  help(): MessageEmbed {
+  help(): EmbedBuilder {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
 
-  async setttslength(guild: Guild, length: number | null): Promise<MessageEmbed> {
+  async setttslength(guild: Guild, length: number | null): Promise<EmbedBuilder> {
     const guildDB = await MDB.get.guild(guild);
     if (!guildDB) return client.mkembed({
       title: "데이터베이스오류",
       description: "데이터베이스 연결 실패",
-      color: "DARK_RED"
+      color: "DarkRed"
     });
     if (length === null) return client.mkembed({
       title: `현재 TTS 최대글자수`,
@@ -84,12 +84,12 @@ export default class OptionCommand implements Command {
     if (length > 1000) return client.mkembed({
       title: "길이오류",
       description: "최대 1000자까지 설정가능",
-      color: "DARK_RED"
+      color: "DarkRed"
     });
     if (length < 5) return client.mkembed({
       title: "길이오류",
       description: "최소 5자까지 설정가능",
-      color: "DARK_RED"
+      color: "DarkRed"
     });
     let old = guildDB.tts.length ? guildDB.tts.length : 300;
     guildDB.tts.length = length;
@@ -97,7 +97,7 @@ export default class OptionCommand implements Command {
       if (!val) return client.mkembed({
         title: "데이터베이스오류",
         description: "데이터베이스 적용 실패",
-        color: "DARK_RED"
+        color: "DarkRed"
       });
       return client.mkembed({
         title: "설정완료",
@@ -107,12 +107,12 @@ export default class OptionCommand implements Command {
       return client.mkembed({
         title: "데이터베이스오류",
         description: "데이터베이스 적용 실패",
-        color: "DARK_RED"
+        color: "DarkRed"
       });
     });
   }
 
-  async setttsmove(guild: Guild, move: boolean | null): Promise<MessageEmbed> {
+  async setttsmove(guild: Guild, move: boolean | null): Promise<EmbedBuilder> {
     const tdb = client.gettts(guild);
     if (move === null) return client.mkembed({
       title: `현재 TTS 이동가능`,
