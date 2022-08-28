@@ -16,7 +16,8 @@ export default async function onMessageCreate (message: Message) {
       if (client.debug) console.log(error); // 오류확인
       handler.err(message, commandName);
     } finally {
-      client.msgdelete(message, 0);
+      if (!commandName || commandName == '' || commandName.replace(/\;| +/g,"") === "") return;
+      client.msgdelete(message, 20, true);
     }
   } else {
     const guildDB = await MDB.get.guild(message.guild!);

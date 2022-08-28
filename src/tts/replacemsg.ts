@@ -27,7 +27,9 @@ export const replaceobj: {
   '개새끼': '멍새끼',
   'ㅇㅎ': '아하',
   'ㄱㄱ': '기역기역',
-  'ㅈㄴ': '존나'
+  'ㅈㄴ': '존나',
+  'ㅃㄹ': '빨리',
+  'ㄱㅊ': '괜찮'
 };
 let msglist: string[] = [];
 for (let i in replaceobj) {
