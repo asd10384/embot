@@ -1,4 +1,10 @@
+import "dotenv/config";
 import { Guild } from "discord.js";
+
+let getReplace: { [key: string]: string } = {};
+const getReplaceString = process.env.REPLACETEXT || "";
+const get = eval(getReplaceString);
+if (get[0]) getReplace = get[0];
 
 export const replaceobj: {
   [key: string]: string
@@ -15,21 +21,17 @@ export const replaceobj: {
   '\\[': '여는대괄호',
   '\\]': '닫는대괄호',
   'ㄹㅇ': '리얼',
-  'ㅅㅂ': '시바',
   'ㄲㅂ': '까비',
   'ㅎㅇ': '하이',
   'ㅇㅋ': '오키',
   'ㄴㅇㅅ': '나이스',
   'ㅇㅈ': '인정',
   'ㅅㄱ': '수고',
-  '시발': '야발',
-  '씨발': '야발',
-  '개새끼': '멍새끼',
   'ㅇㅎ': '아하',
   'ㄱㄱ': '기역기역',
-  'ㅈㄴ': '존나',
   'ㅃㄹ': '빨리',
-  'ㄱㅊ': '괜찮'
+  'ㄱㅊ': '괜찮',
+  ...getReplace
 };
 let msglist: string[] = [];
 for (let i in replaceobj) {
