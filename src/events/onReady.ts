@@ -1,21 +1,22 @@
 import "dotenv/config";
-import { client, handler } from "../index";
+import { client, handler } from "..";
+import { Logger } from "../utils/Logger";
 
-
-/** onReady 핸들러 */
-export default async function onReady() {
+export const onReady = () => {
   if (!client.user) return;
-
   const prefix = client.prefix;
-  let actlist: { text: string, time: number }[] = eval(process.env.ACTIVITY!);
+  let actlist: { text: string, time: number }[] = eval(process.env.ACTIVITY || '[{ "text": `/help`, time: 10 }, { "text": `${prefix}help`, "time": 10 }]');
 
-  console.log('Ready!', client.user.username);
-  console.log('Activity:', JSON.stringify(actlist));
-  console.log('로그확인:', client.debug);
+  Logger.ready(`Ready! ${client.user.username}`);
+  Logger.ready(`prefix: ${prefix}`);
+  Logger.ready(`Activity: ${JSON.stringify(actlist)}`);
+  Logger.ready(`로그확인: ${client.debug}`);
 
-  if (process.env.REFRESH_SLASH_COMMAND_ON_READY === 'true') handler.registCachedCommands(client);
+  if (process.env.REFRESH_SLASH_COMMAND_ON_READY === "true") handler.registCachedCommands(client);
 
+  if (actlist.length < 1) return;
   client.user.setActivity(actlist[0].text);
+  if (actlist.length < 2) return;
   let i = 1;
   let time = actlist[1].time;
   setInterval(() => {

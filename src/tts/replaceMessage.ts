@@ -60,7 +60,7 @@ export function replacetext(guild: Guild, text: string): string {
     const member = guild.members.cache.get(t.replace(/[^0-9]/g,''));
     return (member) ? (member.nickname) ? member.nickname : (member.user) ? member.user.username : '유저' : '유저';
   });
-  text = text.replace(/\<a?\:.*\:[(0-9)]{18}\>/g, (t) => {
+  text = text.replace(/\<a?\:.*\:[(0-9)]{18}\>/g, () => {
     return '이모티콘';
   });
   return text;

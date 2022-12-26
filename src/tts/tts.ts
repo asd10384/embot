@@ -1,16 +1,15 @@
 import "dotenv/config";
-import "./googlettsapi";
 import { client } from "../index";
-import { Guild } from "discord.js";
-import { M } from "../aliases/discord.js.js";
-import MDB from "../database/Mysql";
+import { Guild, Message } from "discord.js";
+import { QDB } from "../databases/Quickdb";
 import axios from "axios";
 import { makefile, signaturesiteurl } from "./signature";
 import { getsignature } from "./signature";
 import { createAudioPlayer, createAudioResource, DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection } from "@discordjs/voice";
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
-import { repalcelist, replaceobj, replacetext } from "./replacemsg";
+import { repalcelist, replaceobj, replacetext } from "./replaceMessage";
+import { TimerTime } from "./ttsConfig";
 
 export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH.slice(0,-1) : process.env.TTS_FILE_PATH : '';
 export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH.slice(0,-1) : process.env.SIGNATURE_FILE_PATH : '';
@@ -36,19 +35,23 @@ export let sncheckobj: { [key: string]: string } = {};
 export let snlist: string[] = [];
 export let sncheck: RegExp = /default/;
 
-export async function restartsignature(): Promise<string> {
-  const sig = await getsignature();
-  snobj = sig[0];
-  sncheckobj = sig[1];
-  snlist = Object.keys(sncheckobj);
-  sncheck = new RegExp(Object.keys(sncheckobj).join('|'), 'gi');
-  const getlog = await makefile(sig[0]);
-  console.log(getlog);
-  return getlog;
-}
+export const restartsignature = () => new Promise<string>(async (res, rej) => {
+  try {
+    const sig = await getsignature();
+    snobj = sig[0];
+    sncheckobj = sig[1];
+    snlist = Object.keys(sncheckobj);
+    sncheck = new RegExp(Object.keys(sncheckobj).join('|'), 'gi');
+    const getlog = await makefile(sig[0]);
+    console.log(getlog);
+    return res(getlog);
+  } catch(err) {
+    return rej(err);
+  }
+});
 
 
-export default class TTS {
+export class TTS {
   guild: Guild;
   ttstimer: NodeJS.Timeout | undefined;
   lasttts: number;
@@ -67,35 +70,40 @@ export default class TTS {
     this.move = getmove;
   }
 
-  async tts(message: M, text: string) {
+  async tts(message: Message, text: string) {
     text = replacetext(this.guild, text);
     if (message.member) {
-      let userDB = await MDB.get.user(message.member);
-      if (userDB && userDB.tts.findIndex((ttsDB) => ttsDB.guildId === this.guild.id) > -1) {
+      const UDB = await QDB.user.get(this.guild, message.member!);
+      if (UDB.tts.ban) {
         client.msgdelete(message, 70, true);
-        const ttsDB = userDB.tts[userDB.tts.findIndex(ttsDB => ttsDB.guildId === this.guild.id)];
-        if (ttsDB.inf || ttsDB.time - Date.now() > 0) {
+        if (UDB.tts.time == -1 || UDB.tts.time - Date.now() > 0) {
           return message.member.user.send({
             embeds: [
               client.mkembed({
-                author: { name: message.guild?.name!, iconURL: message.guild?.iconURL()! },
+                author: { name: message.guild!.name, iconURL: message.guild!.iconURL() || "" },
                 title: `\` TTS ban \``,
                 description: `
                   \` 현재 당신은 TTS ban 상태입니다. \`
                   
                   현재 TTS 를 사용할수 없는 상태입니다.
-                  남은시간 : ${(ttsDB.inf) ? "무기한" : ((ttsDB.time - Date.now())/1000).toFixed(2) + "초"}
+                  남은시간 : ${(UDB.tts.time == -1) ? "무기한" : ((UDB.tts.time - Date.now())/1000).toFixed(2) + "초"}
     
-                  ban한사람 : <@${ttsDB.banforid}>
-                  ban된시간 : ${ttsDB.date}
+                  ban한사람 : <@${UDB.tts.banforid}>
+                  ban된시간 : <t:${Math.round(UDB.tts.date/1000)}:F> (<t:${UDB.tts.date}:R>)
                 `,
                 color: 'DarkRed'
               })
             ]
           }).then(m => client.msgdelete(m, 3));
         } else {
-          userDB.tts.splice(userDB.tts.findIndex(ttsDB => ttsDB.guildId === message.guildId!), 1);
-          await MDB.update.user(userDB.id, { tts: JSON.stringify(userDB.tts) }).catch((err) => {});
+          await QDB.user.set(this.guild.id, message.member!.id, {
+            tts: {
+              ban: false,
+              banforid: "",
+              date: 0,
+              time: 0
+            }
+          }).catch(() => {});
         }
       }
     }
@@ -137,11 +145,11 @@ export default class TTS {
         break;
       }
     }
-    const file = await this.mktts(randomfilename, text).catch((err) => {
+    const file = await this.mktts(randomfilename, text).catch(() => {
       return undefined;
     });
     if (!file) return;
-    this.play(channel.id, file, randomfilename).catch((err) => {});
+    this.play(channel.id, file, randomfilename).catch(() => {});
     return;
   }
   async play(channelID: string, fileURL: string, filename: string, options?: { volume?: number }) {
@@ -165,8 +173,8 @@ export default class TTS {
     this.ttstimer = setTimeout(() => {
       this.move = true;
       getVoiceConnection(this.guild.id)?.disconnect();
-    }, 1000 * client.ttstimertime);
-  
+    }, 1000 * TimerTime);
+
     try {
       this.setPlayerSubscription?.player.stop();
       const Player = createAudioPlayer();
@@ -191,13 +199,13 @@ export default class TTS {
     return;
   }
 
-  async getchannel(message: M) {
+  async getchannel(message: Message) {
     if (message.member?.voice.channel) return message.member.voice.channel;
     const bot = await message.guild?.members.fetchMe({ cache: true });
     if (bot?.voice.channel) return bot.voice.channel;
     return undefined;
   }
-  async getbotchannelboolen(message: M) {
+  async getbotchannelboolen(message: Message) {
     const bot = await message.guild?.members.fetchMe({ cache: true });
     if (bot?.voice.channel) return true;
     return false;
@@ -221,7 +229,15 @@ export default class TTS {
             if (existsSync(`${signaturefilepath}/${scobj[list[i]]}.mp3`)) getbuf = readFileSync(`${signaturefilepath}/${scobj[list[i]]}.mp3`);
             if (!getbuf) {
               var encodetext = encodeURI(scobj[list[i]]);
-              var getsitebuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, { responseType: "arraybuffer", timeout: 3000 }).catch((err) => {
+              var getsitebuf = await axios.get(`${signaturesiteurl}/file/${encodetext}.mp3`, {
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "Accept-Encoding": "gzip,deflate,compress",
+                  "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
+              },
+                responseType: "arraybuffer",
+                timeout: 3000
+              }).catch(() => {
                 return undefined;
               });
               if (getsitebuf?.data) getbuf = getsitebuf.data;
@@ -232,13 +248,13 @@ export default class TTS {
           if (getbuf) {
             buf = Buffer.from(getbuf);
           } else {
-            buf = await this.gettext(list[i]).catch((err) => {
+            buf = await this.gettext(list[i]).catch(() => {
               return undefined;
             });
           }
         } else {
           list[i] = this.replacemsg(list[i]);
-          buf = await this.gettext(list[i]).catch((err) => {
+          buf = await this.gettext(list[i]).catch(() => {
             return undefined;
           });
         }
@@ -252,7 +268,7 @@ export default class TTS {
         return;
       }
     } else {
-      output = await this.gettext(text).catch((err) => {
+      output = await this.gettext(text).catch(() => {
         return undefined;
       });
       if (!output) return;
@@ -282,12 +298,12 @@ export default class TTS {
           // sampleRateHertz: 16000, // 헤르츠
           // effectsProfileId: ['medium-bluetooth-speaker-class-device'] // 효과 https://cloud.google.com/text-to-speech/docs/audio-profiles
         }
-      }).catch((err) => {
+      }).catch(() => {
         return undefined;
       });
       if (!response || !response[0] || !response[0].audioContent) return undefined;
       return response[0].audioContent;
-    } catch(err) {
+    } catch {
       return undefined;
     }
   }

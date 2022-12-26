@@ -1,27 +1,24 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
-import { I, D, M } from "../aliases/discord.js.js";
-import { GuildMember, EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
-import format_date from "../function/format";
+import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild } from "discord.js";
 
 /**
  * DB
- * let guildDB = await MDB.get.guild(interaction);
+ * const GDB = await MDB.get.guild(interaction);
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
  * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
-/** 예시 명령어 */
-export default class UserCommand implements Command {
+export default class implements Command {
   /** 해당 명령어 설명 */
   name = "유저";
   visible = true;
   description = "user";
   information = "유저 정보확인";
   aliases: string[] = [ "user" ];
-  metadata: D = {
+  metadata: ChatInputApplicationCommandData = {
     name: this.name,
     description: this.description,
     options: [{
@@ -34,29 +31,34 @@ export default class UserCommand implements Command {
   msgmetadata?: { name: string; des: string; }[] = undefined;
 
   /** 실행되는 부분 */
-  async slashrun(interaction: I) {
-    const user = interaction.options.getUser("유저", true);
+  async slashRun(interaction: CommandInteraction) {
+    const user = interaction.options.data[0]!.user!;
     const member = interaction.guild!.members.cache.get(user.id)!;
-    return await interaction.editReply({ embeds: [ this.user(interaction, member) ] });
+    return await interaction.followUp({ embeds: [ this.user(interaction.guild!, member) ] });
   }
-  async msgrun(message: M, args: string[]) {
+  async messageRun(message: Message, args: string[]) {
     if (args[0] && message.guild?.members.cache.some((mem) => mem.id === args[0])) {
-    const member = message.guild!.members.cache.get(args[0])!;
-    return message.channel.send({ embeds: [ this.user(message, member) ] }).then(m => client.msgdelete(m, 4));
+      const member = message.guild!.members.cache.get(args[0])!;
+      return message.channel.send({ embeds: [ this.user(message.guild!, member) ] }).then(m => client.msgdelete(m, 4));
     }
+    return message.channel.send({ embeds: [ this.help() ] }).then(m => client.msgdelete(m, 1));
   }
 
   help(): EmbedBuilder {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
+  
+  format_date(date: number | Date): string {
+    return new Intl.DateTimeFormat('ko-KR').format(date);
+  }
 
-  user(message: I | M, member: GuildMember): EmbedBuilder {
+  user(guild: Guild, member: GuildMember): EmbedBuilder {
     var roles: string = "";
     member?.roles.cache.forEach((role) => {
       if (role && role.name) roles += role.name + '\n';
     });
     return client.mkembed({
-      author: { name: message.guild!.name, iconURL: message.guild!.iconURL()! },
+      author: { name: guild.name, iconURL: guild.iconURL()! },
       title: `\` ${member.nickname ? member.nickname : member.user.username} \` 정보 ${(member.user.bot) ? '(BOT)' : ''}`,
       thumbnail: member.user.displayAvatarURL(),
       description: `
@@ -67,7 +69,7 @@ export default class UserCommand implements Command {
         ${member.user.tag}
 
         \` 서버에 들어온 날짜 \`
-        ${format_date(member.joinedAt!)}
+        ${this.format_date(member.joinedAt!)}
 
         \` 역할 \`
         ${roles}

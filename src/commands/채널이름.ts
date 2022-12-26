@@ -1,9 +1,8 @@
 import { client } from "../index";
-import { check_permission as ckper, embed_permission as emper } from "../function/permission";
+// import { check_permission as ckper, embed_permission as emper } from "../utils/Permission";
 import { Command } from "../interfaces/Command";
-import { I, D, M } from "../aliases/discord.js.js";
-import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChannelType } from "discord.js";
-import MDB from "../database/Mysql";
+import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild } from "discord.js";
+import { QDB } from "../databases/Quickdb";
 
 /**
  * DB
@@ -14,15 +13,14 @@ import MDB from "../database/Mysql";
  * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
-/** 예시 명령어 */
-export default class ExampleCommand implements Command {
+export default class implements Command {
   /** 해당 명령어 설명 */
   name = "채널이름";
   visible = true;
   description = "내가제작한 자동음성채널의 이름변경";
   information = "내가제작한 자동음성채널의 이름변경";
   aliases = [];
-  metadata: D = {
+  metadata: ChatInputApplicationCommandData = {
     name: this.name,
     description: this.description,
     options: [{
@@ -35,11 +33,11 @@ export default class ExampleCommand implements Command {
   msgmetadata?: { name: string; des: string; }[] = undefined;
 
   /** 실행되는 부분 */
-  async slashrun(interaction: I) {
-    return await interaction.editReply({ embeds: [ await this.change(interaction, interaction.options.get("채널이름", true).value as string) ] });
+  async slashRun(interaction: CommandInteraction) {
+    return await interaction.editReply({ embeds: [ await this.change(interaction.guild!, interaction.member as GuildMember, interaction.options.get("채널이름", true).value as string) ] });
   }
-  async msgrun(message: M, args: string[]) {
-    if (args[0]) return message.channel.send({ embeds: [ await this.change(message, args.join(" ")) ] }).then(m => client.msgdelete(m, 3));
+  async messageRun(message: Message, args: string[]) {
+    if (args[0]) return message.channel.send({ embeds: [ await this.change(message.guild!, message.member!, args.join(" ")) ] }).then(m => client.msgdelete(m, 3));
     return message.channel.send({ embeds: [
       client.mkembed({
         title: `명령어`,
@@ -53,19 +51,11 @@ export default class ExampleCommand implements Command {
     return client.help(this.metadata.name, this.metadata, this.msgmetadata)!;
   }
 
-  async change(message: I | M, changeChannelName: string): Promise<EmbedBuilder> {
-    const guildDB = await MDB.get.guild(message.guild!);
+  async change(guild: Guild, member: GuildMember, changeChannelName: string): Promise<EmbedBuilder> {
+    const guildDB = await QDB.guild.get(guild);
     if (!guildDB) return client.mkembed({
       title: `데이터베이스를 찾을수없음`,
       description: `다시시도해주세요.`,
-      color: "DarkRed"
-    });
-    const member = message.member instanceof GuildMember
-      ? message.member
-      : undefined;
-    if (!member) return client.mkembed({
-      title: `유저를 찾을수없음`,
-      description: `유저를 찾을수 없음`,
       color: "DarkRed"
     });
     if (!guildDB.autovc.second.some((autovcDB) => autovcDB.userId === member.id)) return client.mkembed({

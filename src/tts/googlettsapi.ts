@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { writeFileSync } from "fs";
 
-export default function getkeyfile() {
+export const getkeyfile = () => {
     var option = {
         "type": process.env.TYPE,
         "project_id": process.env.PROJECT_ID,
@@ -15,4 +15,6 @@ export default function getkeyfile() {
         "client_x509_cert_url": process.env.AUTH_PROVIDER_X509_CERT_URL
     };
     writeFileSync(`googlettsapi.json`, JSON.stringify(option).replace(/\{/g,'{\n').replace(/\}/g,'\n}').replace(/\,/g, ',\n'));
-}  
+}
+
+getkeyfile();

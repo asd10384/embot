@@ -1,8 +1,9 @@
-import { client, handler } from "../index";
-import { ChannelType, Message } from 'discord.js';
-import MDB from "../database/Mysql";
+import { QDB } from "../databases/Quickdb";
+import { ChannelType, Message } from "discord.js";
+import { client, handler } from "..";
+import { Logger } from "../utils/Logger";
 
-export default async function onMessageCreate (message: Message) {
+export const onMessageCreate = async (message: Message) => {
   if (message.author.bot || message.channel.type === ChannelType.DM) return;
   if (message.content.startsWith(client.prefix)) {
     const content = message.content.slice(client.prefix.length).trim();
@@ -10,19 +11,18 @@ export default async function onMessageCreate (message: Message) {
     const commandName = args.shift()?.toLowerCase();
     const command = handler.commands.get(commandName!) || handler.commands.find((cmd) => cmd.aliases.includes(commandName!));
     try {
-      if (!command || !command.msgrun) return handler.err(message, commandName);
-      command.msgrun(message, args);
+      if (!command || !command.messageRun) return handler.err(message, commandName);
+      command.messageRun(message, args);
     } catch(error) {
-      if (client.debug) console.log(error); // 오류확인
+      if (client.debug) Logger.error(error as any); // 오류확인
       handler.err(message, commandName);
     } finally {
-      if (!commandName || commandName == '' || commandName.replace(/\;| +/g,"") === "") return;
-      client.msgdelete(message, 20, true);
+      client.msgdelete(message, 0, true);
     }
   } else {
-    const guildDB = await MDB.get.guild(message.guild!);
-    if (guildDB?.tts.channelId === message.channelId) {
-      if (guildDB.tts.use) {
+    const GDB = await QDB.guild.get(message.guild!);
+    if (GDB.tts.channelId === message.channelId) {
+      if (GDB.tts.use) {
         client.gettts(message.guild!).tts(message, message.content);
       }
     }

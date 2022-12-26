@@ -1,38 +1,36 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
-import { I, D, M } from "../aliases/discord.js.js";
-import { Guild, EmbedBuilder } from "discord.js";
+import { EmbedBuilder, ChatInputApplicationCommandData, CommandInteraction, Message } from "discord.js";
 import { snobj } from "../tts/tts";
 
 /**
  * DB
- * let guildDB = await MDB.get.guild(interaction);
+ * const GDB = await MDB.get.guild(interaction);
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
  * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
-/** 예시 명령어 */
-export default class 시그니쳐Command implements Command {
+export default class implements Command {
   /** 해당 명령어 설명 */
   name = "시그니쳐";
   visible = true;
   description = "시그니쳐 목록";
   information = "시그니쳐 목록";
   aliases: string[] = [ "signature" ];
-  metadata: D = {
+  metadata: ChatInputApplicationCommandData = {
     name: this.name,
     description: this.description
   };
   msgmetadata?: { name: string; des: string; }[] = undefined;
 
   /** 실행되는 부분 */
-  async slashrun(interaction: I) {
-    return await interaction.editReply({ embeds: await signaturelist(interaction.guild!) });
+  async slashRun(interaction: CommandInteraction) {
+    return await interaction.followUp({ embeds: await signaturelist() });
   }
-  async msgrun(message: M, args: string[]) {
-    return message.channel.send({ embeds: await signaturelist(message.guild!) }).then(m => client.msgdelete(m, 5));
+  async messageRun(message: Message, _args: string[]) {
+    return message.channel.send({ embeds: await signaturelist() }).then(m => client.msgdelete(m, 5));
   }
 
   help(): EmbedBuilder {
@@ -41,9 +39,8 @@ export default class 시그니쳐Command implements Command {
 }
 
 
-export async function signaturelist(guild: Guild): Promise<EmbedBuilder[]> {
+export async function signaturelist(): Promise<EmbedBuilder[]> {
   let max = 20;
-  const tts = client.gettts(guild);
   let page = Math.ceil(snobj.length / 20);
   let embedlist: EmbedBuilder[] = [
     client.mkembed({
