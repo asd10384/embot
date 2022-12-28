@@ -26,3 +26,5 @@ googlettsapi.json
 sounds/
 
 test*.ts
+
+*.sqlite
