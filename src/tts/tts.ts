@@ -10,6 +10,7 @@ import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import { repalcelist, replaceobj, replacetext } from "./replaceMessage";
 import { TimerTime } from "./ttsConfig";
+import { Logger } from "../utils/Logger";
 
 export const ttsfilepath: string = (process.env.TTS_FILE_PATH) ? (process.env.TTS_FILE_PATH.endsWith('/')) ? process.env.TTS_FILE_PATH.slice(0,-1) : process.env.TTS_FILE_PATH : '';
 export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (process.env.SIGNATURE_FILE_PATH.endsWith('/')) ? process.env.SIGNATURE_FILE_PATH.slice(0,-1) : process.env.SIGNATURE_FILE_PATH : '';
@@ -43,7 +44,7 @@ export const restartsignature = () => new Promise<string>(async (res, rej) => {
     snlist = Object.keys(sncheckobj);
     sncheck = new RegExp(Object.keys(sncheckobj).join('|'), 'gi');
     const getlog = await makefile(sig[0]);
-    console.log(getlog);
+    Logger.log(getlog);
     return res(getlog);
   } catch(err) {
     return rej(err);

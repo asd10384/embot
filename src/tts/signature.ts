@@ -1,5 +1,6 @@
 import axios from "axios";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { Logger } from "../utils/Logger";
 import { signaturefilepath } from "./tts";
 import { sleep } from "./ttsConfig";
 
@@ -15,8 +16,7 @@ export const getsignature = async (): Promise<[ { name: string[], url: string }[
     },
     responseType: "json",
     timeout: 5000
-  }).catch((err) => {
-    console.log(err);
+  }).catch(() => {
     return { data: undefined };
   });
   const snobj: { name: string[], url: string }[] | undefined = get.data;
@@ -57,16 +57,16 @@ export const makefile = (snobj: { name: string[], url: string }[]) => new Promis
       try {
         writeFileSync(`${signaturefilepath}/${val.url}.mp3`, getbuf.data);
         sucnum+=1;
-        console.log(`${num}. 파일생성 완료 : ${val.url}`);
+        Logger.log(`${num}. 파일생성 완료 : ${val.url}`);
       } catch (err) {
         errnum+=1;
         errlog.push(`${num}. 파일생성중 오류발생 : ${val.url}`);
-        console.log(`${num}. 파일생성중 오류발생 : ${val.url}`);
+        Logger.error(`${num}. 파일생성중 오류발생 : ${val.url}`);
       }
     } else {
       errnum+=1;
       errlog.push(`${num}. 불러오는중 오류발생 : ${val.url}`);
-      console.log(`${num}. 불러오는중 오류발생 : ${val.url}`);
+      Logger.error(`${num}. 불러오는중 오류발생 : ${val.url}`);
     }
   }
   await sleep(500);

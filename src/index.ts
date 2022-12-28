@@ -10,6 +10,7 @@ import { voiceStateUpdate } from "./events/voiceStateUpdate";
 import { ttsfilepath, signaturefilepath, restartsignature } from "./tts/tts";
 import { existsSync, mkdirSync, readdir, readdirSync, rmdirSync, unlink, unlinkSync } from "fs";
 import { Timestamp } from "./utils/Timestamp";
+import { Logger } from "./utils/Logger";
 
 // 봇 클라이언트 생성
 export const client = new BotClient();
@@ -61,10 +62,10 @@ client.onEvent('voiceStateUpdate', voiceStateUpdate);
     });
   });
 
-  console.log("시그니쳐 불러오는중...");
+  Logger.log("시그니쳐 불러오는중...");
   restartsignature().then(() => {
-    return console.log(`현재시간: ${Timestamp()}\n`);
+    return Logger.log(`현재시간: ${Timestamp()}\n`);
   }).catch(() => {
-    return console.log("시그니쳐 불러오던중 오류발생\n");
+    return Logger.error("시그니쳐 불러오던중 오류발생\n");
   });
 })();
