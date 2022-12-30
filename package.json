@@ -5,8 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "node .",
+    "build:all": "ts-cleaner && tsc && copyfiles -u 1 src/**/* -e src/**/*.ts -e src/**/*.example dist",
     "build": "ts-cleaner && tsc",
-    "dev": "ts-cleaner && tsc && node ."
+    "dev": "npm run build && node ."
   },
   "author": "tkrmagid",
   "license": "ISC",
@@ -19,7 +20,6 @@
     "colors": "^1.4.0",
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
-    "express": "^4.18.2",
     "ffmpeg": "^0.0.4",
     "ffmpeg-static": "^5.1.0",
     "fs": "^0.0.1-security",
