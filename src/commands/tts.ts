@@ -5,7 +5,7 @@ import { ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandD
 import { QDB } from "../databases/Quickdb";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import { signaturelist } from "./시그니쳐";
-import { restartsignature } from "../tts/tts";
+import { restartsignature } from "../tts/ttsClass";
 
 /**
  * DB

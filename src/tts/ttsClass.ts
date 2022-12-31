@@ -162,7 +162,14 @@ export class TTS {
         channelId: channelID
       });
     } else {
-      connection = getVoiceConnection(this.guild.id);
+      const bot = await this.guild.members.fetchMe({ cache: true });
+      if (bot?.voice.channelId) {
+        connection = joinVoiceChannel({
+          adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
+          guildId: this.guild.id,
+          channelId: bot.voice.channelId
+        });
+      }
       if (!connection) connection = joinVoiceChannel({
         adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
         guildId: this.guild.id,

@@ -113,13 +113,13 @@ export default class implements Command {
     const tdb = client.gettts(guild);
     if (move === null) return client.mkembed({
       title: `현재 TTS 이동가능`,
-      description: `**${tdb.move}**`
+      description: `**${tdb.move ? "활성화" : "비활성화"}**`
     });
     let old = tdb.move;
     tdb.setmove(move);
     return client.mkembed({
       title: `설정완료`,
-      description: `TTS 이동가능\n${old} -> ${move}`
+      description: `TTS 이동가능\n${old ? "활성화" : "비활성화"} -> ${move ? "활성화" : "비활성화"}`
     });
   }
 }

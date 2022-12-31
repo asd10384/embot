@@ -7,7 +7,7 @@ import { onInteractionCreate } from "./events/onInteractionCreate";
 import { onMessageCreate } from "./events/onMessageCreate";
 import { guildDelete } from "./events/guildDelete";
 import { voiceStateUpdate } from "./events/voiceStateUpdate";
-import { ttsfilepath, signaturefilepath, restartsignature } from "./tts/tts";
+import { ttsfilepath, signaturefilepath, restartsignature } from "./tts/ttsClass";
 import { existsSync, mkdirSync, readdir, readdirSync, rmdirSync, unlink, unlinkSync } from "fs";
 import { Timestamp } from "./utils/Timestamp";
 import { Logger } from "./utils/Logger";

@@ -2,7 +2,7 @@ import "dotenv/config";
 import { ApplicationCommandOptionType, ChatInputApplicationCommandData, Client, ClientEvents, ColorResolvable, EmbedBuilder, EmbedField, Guild, Message } from "discord.js";
 import { Consts } from "../config/consts";
 // import { Logger } from "../utils/Logger";
-import { TTS } from "../tts/tts";
+import { TTS } from "../tts/ttsClass";
 
 export class BotClient extends Client {
   public debug: boolean;

@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
 import { EmbedBuilder, ChatInputApplicationCommandData, CommandInteraction, Message } from "discord.js";
-import { snobj } from "../tts/tts";
+import { snobj } from "../tts/ttsClass";
 
 /**
  * DB

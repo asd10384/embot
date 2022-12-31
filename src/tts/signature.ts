@@ -1,7 +1,7 @@
 import axios from "axios";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { Logger } from "../utils/Logger";
-import { signaturefilepath } from "./tts";
+import { signaturefilepath } from "./ttsClass";
 import { sleep } from "./ttsConfig";
 
 export const signaturesiteurl = `https://signaturesite.netlify.app`;
