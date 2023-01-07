@@ -18,6 +18,8 @@ const replaceRegExp = new RegExp(repalcelist.join('|'), 'gi');
 const ttsfilelist = new Set<string>();
 const addlasttts = 150;
 
+const googlettsspeed = 1.105; // 트윕속도 : 0.905
+
 const ttsclient = new TextToSpeechClient({
   keyFile: 'googlettsapi.json',
   fallback: false
@@ -163,13 +165,11 @@ export class TTS {
       });
     } else {
       const bot = await this.guild.members.fetchMe({ cache: true });
-      if (bot?.voice.channelId) {
-        connection = joinVoiceChannel({
-          adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-          guildId: this.guild.id,
-          channelId: bot.voice.channelId
-        });
-      }
+      if (bot?.voice.channelId) connection = joinVoiceChannel({
+        adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
+        guildId: this.guild.id,
+        channelId: bot.voice.channelId
+      });
       if (!connection) connection = joinVoiceChannel({
         adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
         guildId: this.guild.id,
@@ -301,7 +301,7 @@ export class TTS {
         },
         audioConfig: {
           audioEncoding: fileformat.ttsformat, // 형식
-          speakingRate: 0.905, // 속도
+          speakingRate: googlettsspeed, // 속도 0.905
           pitch: 0, // 피치
           // sampleRateHertz: 16000, // 헤르츠
           // effectsProfileId: ['medium-bluetooth-speaker-class-device'] // 효과 https://cloud.google.com/text-to-speech/docs/audio-profiles
