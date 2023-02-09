@@ -11,13 +11,19 @@ export const onMessageCreate = async (message: Message) => {
     const commandName = args.shift()?.toLowerCase();
     const command = handler.commands.get(commandName!) || handler.commands.find((cmd) => cmd.aliases.includes(commandName!));
     try {
-      if (!command || !command.messageRun) return handler.err(message, commandName);
+      if (!command || !command.messageRun) {
+        if (!commandName || commandName.replace(/\;| +/g,"").length == 0) return;
+        handler.err(message, commandName);
+        client.msgdelete(message, 0, true);
+        return;
+      }
       command.messageRun(message, args);
+      client.msgdelete(message, 0, true);
     } catch(error) {
       if (client.debug) Logger.error(error as any); // 오류확인
       handler.err(message, commandName);
-    } finally {
       client.msgdelete(message, 0, true);
+      return;
     }
   } else {
     const GDB = await QDB.guild.get(message.guild!);
