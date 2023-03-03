@@ -137,7 +137,7 @@ export default class implements Command {
               categoryID: args[1],
               limit: parseInt(args[2])
             });
-            return await QDB.guild.set(guild.id, { autovc: GDB.autovc }).then((val) => {
+            return await QDB.guild.set(guild, { autovc: GDB.autovc }).then((val) => {
               if (!val) return client.mkembed({
                 title: `\` 자동음성채널 추가 오류 \``,
                 color: "DarkRed"
@@ -185,7 +185,7 @@ export default class implements Command {
     const GDB = await QDB.guild.get(guild);
     if (GDB.autovc.first.some((autovcDB) => autovcDB.channelID === channel.id)) {
       GDB.autovc.first.splice(GDB.autovc.first.findIndex((autovcDB) => autovcDB.channelID === channel.id), 1);
-      return await QDB.guild.set(guild.id, { autovc: GDB.autovc }).then((val) => {
+      return await QDB.guild.set(guild, { autovc: GDB.autovc }).then((val) => {
         if (!val) return client.mkembed({
           title: `\` 자동음성채널 제거 오류 \``,
           color: "DarkRed"

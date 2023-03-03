@@ -26,7 +26,7 @@ async function join(newStats: VoiceState) {
       id: channel.id,
       userId: id
     });
-    await QDB.guild.set(GDB.id, { autovc: GDB.autovc }).then((val) => {
+    await QDB.guild.set(newStats.guild!, { autovc: GDB.autovc }).then((val) => {
       if (val) newStats.member?.voice.setChannel(channel);
     }).catch(() => {});
   }
@@ -36,7 +36,7 @@ async function leave(oldStats: VoiceState) {
     const GDB = await QDB.guild.get(oldStats.guild);
     if (GDB.autovc.second.some((autovcDB) => autovcDB.id === oldStats.channelId)) {
       GDB.autovc.second.splice(GDB!.autovc.second.findIndex((autoDB) => autoDB.id === oldStats.channelId), 1);
-      await QDB.guild.set(GDB.id, { autovc: GDB.autovc }).then((val) => {
+      await QDB.guild.set(oldStats.guild!, { autovc: GDB.autovc }).then((val) => {
         if (val) oldStats.channel?.delete();
       }).catch(() => {});
     }

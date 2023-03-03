@@ -87,7 +87,7 @@ export default class implements Command {
       color: "DarkRed"
     });
     let old = GDB.tts.length ? GDB.tts.length : 300;
-    return await QDB.guild.set(guild.id, { tts: {
+    return await QDB.guild.set(guild, { tts: {
       ...GDB.tts,
       length: length
     } }).then((val) => {

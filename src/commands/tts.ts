@@ -240,7 +240,7 @@ export default class implements Command {
         })
       ]
     });
-    return await QDB.guild.set(guild.id, { tts: {
+    return await QDB.guild.set(guild, { tts: {
       ...GDB.tts,
       channelId: channel.id
     } }).then((val) => {
@@ -261,7 +261,7 @@ export default class implements Command {
           description: `\` ${(member.nickname) ? member.nickname : member.user.username} \` 님은 이미 ban 되어있습니다.`,
           color: "DarkRed"
         });
-        return await QDB.user.set(guild.id, UDB.id, { tts: {
+        return await QDB.user.set(guild, member, { tts: {
           ban: true,
           date: Date.now(),
           time: Date.now()+(time*1000),
@@ -322,7 +322,7 @@ export default class implements Command {
     if (member) {
       const UDB = await QDB.user.get(guild, member);
       if (UDB.tts.ban) {
-        return await QDB.user.set(guild.id, UDB.id, { tts: {
+        return await QDB.user.set(guild, member, { tts: {
           ban: false,
           date: 0,
           time: 0,
