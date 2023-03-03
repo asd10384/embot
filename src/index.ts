@@ -62,6 +62,10 @@ client.onEvent('voiceStateUpdate', voiceStateUpdate);
     });
   });
 
+  if (client.debug) {
+    Logger.log("시그니쳐를 불러오지 않음");
+    return;
+  }
   Logger.log("시그니쳐 불러오는중...");
   restartsignature().then(() => {
     return Logger.log(`현재시간: ${Timestamp()}\n`);
