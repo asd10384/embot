@@ -10,7 +10,7 @@ import { QDB } from "../databases/Quickdb";
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
- * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+ * if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 /** 예시 명령어 */
@@ -57,7 +57,7 @@ export default class implements Command {
     return await interaction.followUp({ embeds: [ this.help() ] });
   }
   // async msgrun(message: Message, args: string[]) {
-  //   return message.channel.send({ embeds: [
+  //   return (message.channel as TextChannel).send({ embeds: [
   //     client.mkembed({
   //       title: `/option`,
   //       description: `명령어를 사용해주세요.`,

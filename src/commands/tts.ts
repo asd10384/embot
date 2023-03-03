@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { check_permission as ckper, embed_permission as emper } from "../utils/Permission";
 import { Command } from "../interfaces/Command";
-import { ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, EmbedBuilder, Guild, Message } from "discord.js";
+import { ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, EmbedBuilder, Guild, Message, TextChannel } from "discord.js";
 import { QDB } from "../databases/Quickdb";
 import { DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import { signaturelist } from "./시그니쳐";
@@ -13,7 +13,7 @@ import { restartsignature } from "../tts/ttsClass";
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.followUp({ embeds: [ emper ] });
- * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+ * if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 export default class implements Command {
@@ -166,7 +166,7 @@ export default class implements Command {
   }
   async messageRun(message: Message, args: string[]) {
     if (args[0] === '채널생성') {
-      if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+      if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
       await this.makechannel(message.guild!);
       return;
     }
@@ -185,39 +185,39 @@ export default class implements Command {
           });
           return;
         }
-        return message.channel.send({ content: "채널을 찾을수 없음" }).then(m => client.msgdelete(m, 1));
+        return (message.channel as TextChannel).send({ content: "채널을 찾을수 없음" }).then(m => client.msgdelete(m, 1));
       }
-      return message.channel.send({ content: "채널을 찾을수 없음" }).then(m => client.msgdelete(m, 1));
+      return (message.channel as TextChannel).send({ content: "채널을 찾을수 없음" }).then(m => client.msgdelete(m, 1));
     }
     if (args[0] === '시그니쳐') {
-      if (args[1] === '목록') return await message.channel.send({ embeds: await signaturelist() }).then(m => client.msgdelete(m, 8));
+      if (args[1] === '목록') return await (message.channel as TextChannel).send({ embeds: await signaturelist() }).then(m => client.msgdelete(m, 8));
       if (args[1] === "리로드") {
         await restartsignature();
-        return message.channel.send({ content: `시그니쳐를 성공적으로 불러왔습니다.` }).then(m => client.msgdelete(m, 2));
+        return (message.channel as TextChannel).send({ content: `시그니쳐를 성공적으로 불러왔습니다.` }).then(m => client.msgdelete(m, 2));
       }
     }
     if (args[0] === 'ban') {
-      if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+      if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
       let uid = (args[1].startsWith("<@") && args[1].endsWith(">")) ? args[1].replace(/\<|\@|\>|\!/g,"") : args[1];
       if (args[1] && message.guild?.members.cache.some((mem) => mem.id === uid)) {
         if (args[2] && !isNaN(args[2] as any)) {
           if (parseInt(args[2]) > 0) {
-            return message.channel.send({ embeds: [ await this.ban(message.guild!, uid, parseInt(args[2])) ] }).then(m => client.msgdelete(m, 2));
+            return (message.channel as TextChannel).send({ embeds: [ await this.ban(message.guild!, uid, parseInt(args[2])) ] }).then(m => client.msgdelete(m, 2));
           }
         }
-        return message.channel.send({ embeds: [ await this.ban(message.guild!, uid, -1) ] }).then(m => client.msgdelete(m, 2));
+        return (message.channel as TextChannel).send({ embeds: [ await this.ban(message.guild!, uid, -1) ] }).then(m => client.msgdelete(m, 2));
       }
-      return message.channel.send({ content: "유저를 찾을수없음" }).then(m => client.msgdelete(m, 1));
+      return (message.channel as TextChannel).send({ content: "유저를 찾을수없음" }).then(m => client.msgdelete(m, 1));
     }
     if (args[0] === 'unban') {
-      if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+      if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
       let uid = (args[1].startsWith("<@") && args[1].endsWith(">")) ? args[1].replace(/\^|\@|\>/g,"") : args[1];
       if (args[1] && message.guild?.members.cache.some((mem) => mem.id === uid)) {
-        return message.channel.send({ embeds: [ await this.unban(message.guild!, uid) ] }).then(m => client.msgdelete(m, 2));
+        return (message.channel as TextChannel).send({ embeds: [ await this.unban(message.guild!, uid) ] }).then(m => client.msgdelete(m, 2));
       }
-      return message.channel.send({ content: "유저를 찾을수없음" }).then(m => client.msgdelete(m, 1));
+      return (message.channel as TextChannel).send({ content: "유저를 찾을수없음" }).then(m => client.msgdelete(m, 1));
     }
-    return message.channel.send({ embeds: [ this.help() ] }).then(m => client.msgdelete(m, 4));
+    return (message.channel as TextChannel).send({ embeds: [ this.help() ] }).then(m => client.msgdelete(m, 4));
   }
 
   help(): EmbedBuilder {

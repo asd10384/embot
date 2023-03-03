@@ -1,11 +1,11 @@
 import "dotenv/config";
 import { client } from "../index";
-import { Guild, Message } from "discord.js";
+import { Guild, Message, TextChannel, VoiceBasedChannel } from "discord.js";
 import { QDB } from "../databases/Quickdb";
 import axios from "axios";
 import { makefile, signaturesiteurl } from "./signature";
 import { getsignature } from "./signature";
-import { createAudioPlayer, createAudioResource, DiscordGatewayAdapterCreator, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection } from "@discordjs/voice";
+import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection } from "@discordjs/voice";
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import { repalcelist, replaceobj, replacetext } from "./replaceMessage";
@@ -60,6 +60,7 @@ export class TTS {
   lasttts: number;
   setPlayerSubscription: PlayerSubscription | undefined;
   move: boolean;
+  connection: VoiceConnection | undefined;
 
   constructor(guild: Guild) {
     this.guild = guild;
@@ -67,6 +68,7 @@ export class TTS {
     this.lasttts = 0;
     this.setPlayerSubscription = undefined;
     this.move = true;
+    this.connection = undefined;
   }
 
   setmove(getmove: boolean) {
@@ -87,7 +89,7 @@ export class TTS {
                 title: `\` TTS ban \``,
                 description: `
                   \` 현재 당신은 TTS ban 상태입니다. \`
-                  
+                
                   현재 TTS 를 사용할수 없는 상태입니다.
                   남은시간 : ${(UDB.tts.time == -1) ? "무기한" : ((UDB.tts.time - Date.now())/1000).toFixed(2) + "초"}
     
@@ -99,7 +101,7 @@ export class TTS {
             ]
           }).then(m => client.msgdelete(m, 3));
         } else {
-          await QDB.user.set(this.guild.id, message.member!.id, {
+          await QDB.user.set(this.guild, message.member!, {
             tts: {
               ban: false,
               banforid: "",
@@ -111,7 +113,7 @@ export class TTS {
       }
     }
     const channel = await this.getchannel(message);
-    if (!channel) return message.channel.send({
+    if (!channel) return (message.channel as TextChannel).send({
       embeds: [
         client.mkembed({
           title: `음성채널을 찾을수 없습니다.`,
@@ -121,7 +123,7 @@ export class TTS {
       ]
     }).then(m => client.msgdelete(m, 1));
 
-    if (text.length > 300) return message.channel.send({
+    if (text.length > 300) return (message.channel as TextChannel).send({
       embeds: [
         client.mkembed({
           title: `너무많은글자`,
@@ -152,31 +154,13 @@ export class TTS {
       return undefined;
     });
     if (!file) return;
-    this.play(channel.id, file, randomfilename).catch(() => {});
+    this.connection = undefined;
+    this.play(channel, file, randomfilename).catch(() => {});
     return;
   }
-  async play(channelID: string, fileURL: string, filename: string, options?: { volume?: number }) {
-    let connection: VoiceConnection | undefined = undefined;
-    if (this.move) {
-      connection = joinVoiceChannel({
-        adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-        guildId: this.guild.id,
-        channelId: channelID
-      });
-    } else {
-      const bot = await this.guild.members.fetchMe({ cache: true });
-      if (bot?.voice.channelId) connection = joinVoiceChannel({
-        adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-        guildId: this.guild.id,
-        channelId: bot.voice.channelId
-      });
-      if (!connection) connection = joinVoiceChannel({
-        adapterCreator: this.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-        guildId: this.guild.id,
-        channelId: channelID
-      });
-    }
-    if (!connection) return;
+  async play(channel: VoiceBasedChannel, fileURL: string, filename: string, options?: { volume?: number }) {
+    this.connection = await this.getConnection(channel);
+    if (!this.connection) return;
     
     this.ttstimer = setTimeout(() => {
       this.move = true;
@@ -186,14 +170,20 @@ export class TTS {
     try {
       this.setPlayerSubscription?.player.stop();
       const Player = createAudioPlayer();
+      Player.setMaxListeners(0);
       const resource = createAudioResource(fileURL, {
         inlineVolume: true
       });
       resource.volume?.setVolume((options && options.volume) ? options.volume : 1);
       Player.play(resource);
-      const subscription = connection.subscribe(Player);
-      this.setPlayerSubscription = subscription;
-    } catch (err) {
+      try {
+        await entersState(Player, AudioPlayerStatus.Playing, 5000);
+        const subscription = this.connection.subscribe(Player);
+        this.setPlayerSubscription = subscription;
+      } catch {
+        this.setPlayerSubscription = undefined;
+      }
+    } catch {
       this.setPlayerSubscription = undefined;
     }
     setTimeout(() => {
@@ -202,9 +192,50 @@ export class TTS {
           if (ttsfilelist.has(filename)) ttsfilelist.delete(filename);
           if (err) return;
         });
-      } catch (err) {}
-    }, 2500);
+      } catch {}
+    }, 5000);
     return;
+  }
+
+  async getConnection(channel: VoiceBasedChannel) {
+    return new Promise<VoiceConnection | undefined>(async (res) => {
+      try {
+        let connection: VoiceConnection | undefined = undefined;
+        if (this.move) {
+          if (getVoiceConnection(this.guild.id)?.joinConfig.channelId === channel.id) {
+            connection = getVoiceConnection(this.guild.id);
+          } else {
+            connection = joinVoiceChannel({
+              adapterCreator: this.guild.voiceAdapterCreator,
+              guildId: this.guild.id,
+              channelId: channel.id
+            });
+          }
+        } else {
+          if (getVoiceConnection(this.guild.id)?.joinConfig?.channelId) {
+            connection = getVoiceConnection(this.guild.id);
+          } else {
+            const bot = await this.guild.members.fetchMe({ cache: true });
+            if (bot?.voice.channelId) connection = joinVoiceChannel({
+              adapterCreator: this.guild.voiceAdapterCreator,
+              guildId: this.guild.id,
+              channelId: bot.voice.channelId
+            });
+          }
+          if (!connection) connection = joinVoiceChannel({
+            adapterCreator: this.guild.voiceAdapterCreator,
+            guildId: this.guild.id,
+            channelId: channel.id
+          });
+        }
+        if (!connection) return res(undefined);
+        connection.setMaxListeners(0);
+        connection.configureNetworking();
+        return res(connection);
+      } catch {
+        return res(undefined);
+      }
+    });
   }
 
   async getchannel(message: Message) {
@@ -213,6 +244,7 @@ export class TTS {
     if (bot?.voice.channel) return bot.voice.channel;
     return undefined;
   }
+
   async getbotchannelboolen(message: Message) {
     const bot = await message.guild?.members.fetchMe({ cache: true });
     if (bot?.voice.channel) return true;

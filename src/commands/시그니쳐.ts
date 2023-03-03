@@ -1,6 +1,6 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
-import { EmbedBuilder, ChatInputApplicationCommandData, CommandInteraction, Message } from "discord.js";
+import { EmbedBuilder, ChatInputApplicationCommandData, CommandInteraction, Message, TextChannel } from "discord.js";
 import { snobj } from "../tts/ttsClass";
 
 /**
@@ -9,7 +9,7 @@ import { snobj } from "../tts/ttsClass";
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
- * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+ * if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 export default class implements Command {
@@ -30,7 +30,7 @@ export default class implements Command {
     return await interaction.followUp({ embeds: await signaturelist() });
   }
   async messageRun(message: Message, _args: string[]) {
-    return message.channel.send({ embeds: await signaturelist() }).then(m => client.msgdelete(m, 5));
+    return (message.channel as TextChannel).send({ embeds: await signaturelist() }).then(m => client.msgdelete(m, 5));
   }
 
   help(): EmbedBuilder {

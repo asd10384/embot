@@ -1,7 +1,7 @@
 import { client } from "../index";
 import { check_permission as ckper, embed_permission as emper } from "../utils/Permission";
 import { Command } from "../interfaces/Command";
-import { ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, EmbedBuilder, Guild, Message, VoiceChannel } from "discord.js";
+import { ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, EmbedBuilder, Guild, Message, TextChannel, VoiceChannel } from "discord.js";
 import { QDB } from "../databases/Quickdb";
 
 /**
@@ -10,7 +10,7 @@ import { QDB } from "../databases/Quickdb";
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
- * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+ * if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 export default class implements Command {
@@ -95,19 +95,19 @@ export default class implements Command {
     return await interaction.followUp({ embeds: [ this.help() ] });
   }
   async messageRun(message: Message, args: string[]) {
-    if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
-    if (args[0] === "목록") return message.channel.send({ embeds: [ await this.getlist(message.guild!) ] }).then(m => client.msgdelete(m, 3));
+    if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+    if (args[0] === "목록") return (message.channel as TextChannel).send({ embeds: [ await this.getlist(message.guild!) ] }).then(m => client.msgdelete(m, 3));
     if (args[0] === "추가") {
       const newargs = args.slice(1);
-      return message.channel.send({ embeds: [ await this.add(message.guild!, newargs, false) ] }).then(m => client.msgdelete(m, 3));
+      return (message.channel as TextChannel).send({ embeds: [ await this.add(message.guild!, newargs, false) ] }).then(m => client.msgdelete(m, 3));
     }
     if (args[0] === "제거") {
       if (args[1] && message.guild?.channels.cache.some((ch) => ch.id === args[1] && ch.type === ChannelType.GuildVoice)) {
         const channel = message.guild.channels.cache.get(args[1])! as VoiceChannel;
-        return message.channel.send({ embeds: [ await this.remove(message.guild!, channel, false) ] }).then(m => client.msgdelete(m, 2));
+        return (message.channel as TextChannel).send({ embeds: [ await this.remove(message.guild!, channel, false) ] }).then(m => client.msgdelete(m, 2));
       }
     }
-    return message.channel.send({ embeds: [ this.help() ] }).then(m => client.msgdelete(m, 4));
+    return (message.channel as TextChannel).send({ embeds: [ this.help() ] }).then(m => client.msgdelete(m, 4));
   }
 
   help(): EmbedBuilder {

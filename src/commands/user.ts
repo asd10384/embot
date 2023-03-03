@@ -1,6 +1,6 @@
 import { client } from "../index";
 import { Command } from "../interfaces/Command";
-import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild } from "discord.js";
+import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild, TextChannel } from "discord.js";
 
 /**
  * DB
@@ -8,7 +8,7 @@ import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChatInputAppli
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
- * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+ * if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 export default class implements Command {
@@ -39,9 +39,9 @@ export default class implements Command {
   async messageRun(message: Message, args: string[]) {
     if (args[0] && message.guild?.members.cache.some((mem) => mem.id === args[0])) {
       const member = message.guild!.members.cache.get(args[0])!;
-      return message.channel.send({ embeds: [ this.user(message.guild!, member) ] }).then(m => client.msgdelete(m, 4));
+      return (message.channel as TextChannel).send({ embeds: [ this.user(message.guild!, member) ] }).then(m => client.msgdelete(m, 4));
     }
-    return message.channel.send({ embeds: [ this.help() ] }).then(m => client.msgdelete(m, 1));
+    return (message.channel as TextChannel).send({ embeds: [ this.help() ] }).then(m => client.msgdelete(m, 1));
   }
 
   help(): EmbedBuilder {

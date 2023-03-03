@@ -1,7 +1,7 @@
 import { client } from "../index";
 // import { check_permission as ckper, embed_permission as emper } from "../utils/Permission";
 import { Command } from "../interfaces/Command";
-import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild } from "discord.js";
+import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild, TextChannel } from "discord.js";
 import { QDB } from "../databases/Quickdb";
 
 /**
@@ -10,7 +10,7 @@ import { QDB } from "../databases/Quickdb";
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
- * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+ * if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 export default class implements Command {
@@ -37,8 +37,8 @@ export default class implements Command {
     return await interaction.editReply({ embeds: [ await this.change(interaction.guild!, interaction.member as GuildMember, interaction.options.get("채널이름", true).value as string) ] });
   }
   async messageRun(message: Message, args: string[]) {
-    if (args[0]) return message.channel.send({ embeds: [ await this.change(message.guild!, message.member!, args.join(" ")) ] }).then(m => client.msgdelete(m, 3));
-    return message.channel.send({ embeds: [
+    if (args[0]) return (message.channel as TextChannel).send({ embeds: [ await this.change(message.guild!, message.member!, args.join(" ")) ] }).then(m => client.msgdelete(m, 3));
+    return (message.channel as TextChannel).send({ embeds: [
       client.mkembed({
         title: `명령어`,
         description: `${client.prefix}채널이름 [변경할채널명]`,

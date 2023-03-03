@@ -1,7 +1,7 @@
 import { client } from "../index";
 // import { check_permission as ckper, embed_permission as emper } from "../utils/Permission";
 import { Command } from "../interfaces/Command";
-import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild } from "discord.js";
+import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild, TextChannel } from "discord.js";
 import { QDB } from "../databases/Quickdb";
 
 /**
@@ -10,7 +10,7 @@ import { QDB } from "../databases/Quickdb";
  * 
  * check permission(role)
  * if (!(await ckper(interaction))) return await interaction.editReply({ embeds: [ emper ] });
- * if (!(await ckper(message))) return message.channel.send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
+ * if (!(await ckper(message))) return (message.channel as TextChannel).send({ embeds: [ emper ] }).then(m => client.msgdelete(m, 1));
  */
 
 export default class implements Command {
@@ -40,24 +40,24 @@ export default class implements Command {
     if (args[0]) {
       if (!isNaN(args[0] as any)) {
         const limitsize = Number(args[0]);
-        if (limitsize <= 0) return message.channel.send({ embeds: [
+        if (limitsize <= 0) return (message.channel as TextChannel).send({ embeds: [
           client.mkembed({
             title: `인원수 설정 오류`,
             description: `1보다 낮게 설정할수 없습니다.`,
             color: "DarkRed"
           })
         ] });
-        if (limitsize > 99) return message.channel.send({ embeds: [
+        if (limitsize > 99) return (message.channel as TextChannel).send({ embeds: [
           client.mkembed({
             title: `인원수 설정 오류`,
             description: `99보다 크게 설정할수 없습니다.`,
             color: "DarkRed"
           })
         ] });
-        return message.channel.send({ embeds: [ await this.change(message.guild!, message.member!, limitsize) ] }).then(m => client.msgdelete(m, 3));
+        return (message.channel as TextChannel).send({ embeds: [ await this.change(message.guild!, message.member!, limitsize) ] }).then(m => client.msgdelete(m, 3));
       }
     }
-    return message.channel.send({ embeds: [
+    return (message.channel as TextChannel).send({ embeds: [
       client.mkembed({
         title: `명령어`,
         description: `${client.prefix}채널인원 [변경할인원수]`,
