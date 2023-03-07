@@ -5,7 +5,7 @@ import { QDB } from "../databases/Quickdb";
 import axios from "axios";
 import { makefile, signaturesiteurl } from "./signature";
 import { getsignature } from "./signature";
-import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection } from "@discordjs/voice";
+import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection, VoiceConnectionState, VoiceConnectionStatus } from "@discordjs/voice";
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import { repalcelist, replaceobj, replacetext } from "./replaceMessage";
@@ -61,6 +61,7 @@ export class TTS {
   setPlayerSubscription: PlayerSubscription | undefined;
   move: boolean;
   connection: VoiceConnection | undefined;
+  statsChageTime: number;
 
   constructor(guild: Guild) {
     this.guild = guild;
@@ -69,6 +70,7 @@ export class TTS {
     this.setPlayerSubscription = undefined;
     this.move = true;
     this.connection = undefined;
+    this.statsChageTime = 0;
   }
 
   setmove(getmove: boolean) {
@@ -202,7 +204,7 @@ export class TTS {
       try {
         let connection: VoiceConnection | undefined = undefined;
         if (this.move) {
-          if (getVoiceConnection(this.guild.id)?.joinConfig.channelId === channel.id) {
+          if (this.guild.members.cache.get(client.user?.id || "")?.voice.channelId === channel.id) {
             connection = getVoiceConnection(this.guild.id);
           } else {
             connection = joinVoiceChannel({
@@ -210,32 +212,62 @@ export class TTS {
               guildId: this.guild.id,
               channelId: channel.id
             });
+            connection.once(VoiceConnectionStatus.Ready, () => {
+              if (connection) this.setConnection(connection);
+              return res(connection);
+            });
           }
         } else {
-          if (getVoiceConnection(this.guild.id)?.joinConfig?.channelId) {
-            connection = getVoiceConnection(this.guild.id);
-          } else {
-            const bot = await this.guild.members.fetchMe({ cache: true });
-            if (bot?.voice.channelId) connection = joinVoiceChannel({
+          const bot = this.guild.members.cache.get(client.user?.id || "");
+          if (bot?.voice.channelId) {
+            connection = joinVoiceChannel({
               adapterCreator: this.guild.voiceAdapterCreator,
               guildId: this.guild.id,
               channelId: bot.voice.channelId
             });
+            connection.once(VoiceConnectionStatus.Ready, () => {
+              if (connection) this.setConnection(connection);
+              return res(connection);
+            });
           }
-          if (!connection) connection = joinVoiceChannel({
-            adapterCreator: this.guild.voiceAdapterCreator,
-            guildId: this.guild.id,
-            channelId: channel.id
-          });
+          if (!connection) {
+            connection = joinVoiceChannel({
+              adapterCreator: this.guild.voiceAdapterCreator,
+              guildId: this.guild.id,
+              channelId: channel.id
+            });
+            connection.once(VoiceConnectionStatus.Ready, () => {
+              if (connection) this.setConnection(connection);
+              return res(connection);
+            });
+          }
         }
         if (!connection) return res(undefined);
-        connection.setMaxListeners(0);
-        connection.configureNetworking();
         return res(connection);
       } catch {
         return res(undefined);
       }
     });
+  }
+
+  setConnection(connection: VoiceConnection): VoiceConnection {
+    connection.setMaxListeners(0);
+    connection.configureNetworking();
+    connection.on("stateChange", (oldState: VoiceConnectionState, newState: VoiceConnectionState) => {
+      if (this.statsChageTime <= Date.now()) {
+        this.statsChageTime = Date.now() + 10000;
+        connection.configureNetworking();
+        const oldNetworking = Reflect.get(oldState, 'networking');
+        const newNetworking = Reflect.get(newState, 'networking');
+        const networkStateChangeHandler = (_oldNetworkState: any, newNetworkState: any) => {
+          const newUdp = Reflect.get(newNetworkState, 'udp');
+          clearInterval(newUdp?.keepAliveInterval);
+        }
+        oldNetworking?.off('stateChange', networkStateChangeHandler);
+        newNetworking?.on('stateChange', networkStateChangeHandler);
+      }
+    });
+    return connection;
   }
 
   async getchannel(message: Message) {
@@ -329,7 +361,7 @@ export class TTS {
         input: { text: text },
         voice: {
           languageCode: 'ko-KR',
-          name: 'ko-KR-Standard-A'
+          name: 'ko-KR-Standard-A' // ko-KR-Neural2-A
         },
         audioConfig: {
           audioEncoding: fileformat.ttsformat, // 형식
