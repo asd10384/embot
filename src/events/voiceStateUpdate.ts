@@ -1,9 +1,15 @@
+import { getVoiceConnection } from '@discordjs/voice';
 import { ChannelType, VoiceState } from 'discord.js';
+import { client } from 'index';
 import { QDB } from "../databases/Quickdb";
 
 export const voiceStateUpdate = (oldStats: VoiceState, newStats: VoiceState) => {
   if (oldStats) leave(oldStats);
   if (newStats) join(newStats);
+  if (oldStats.member?.id === client.user?.id && oldStats.channel && !newStats.channel) {
+    getVoiceConnection(oldStats.guild.id)?.disconnect();
+    getVoiceConnection(oldStats.guild.id)?.destroy();
+  }
 }
 
 async function join(newStats: VoiceState) {
