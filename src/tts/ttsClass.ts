@@ -5,7 +5,7 @@ import { QDB } from "../databases/Quickdb";
 import axios from "axios";
 import { makefile, signaturesiteurl } from "./signature";
 import { getsignature } from "./signature";
-import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection, VoiceConnectionState, VoiceConnectionStatus } from "@discordjs/voice";
+import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection, VoiceConnectionStatus } from "@discordjs/voice";
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import { repalcelist, replaceobj, replacetext } from "./replaceMessage";
@@ -167,6 +167,7 @@ export class TTS {
     this.ttstimer = setTimeout(() => {
       this.move = true;
       getVoiceConnection(this.guild.id)?.disconnect();
+      getVoiceConnection(this.guild.id)?.destroy();
     }, 1000 * TimerTime);
 
     try {
@@ -252,21 +253,21 @@ export class TTS {
 
   setConnection(connection: VoiceConnection): VoiceConnection {
     connection.setMaxListeners(0);
-    connection.configureNetworking();
-    connection.on("stateChange", (oldState: VoiceConnectionState, newState: VoiceConnectionState) => {
-      if (this.statsChageTime <= Date.now()) {
-        this.statsChageTime = Date.now() + 10000;
-        connection.configureNetworking();
-        const oldNetworking = Reflect.get(oldState, 'networking');
-        const newNetworking = Reflect.get(newState, 'networking');
-        const networkStateChangeHandler = (_oldNetworkState: any, newNetworkState: any) => {
-          const newUdp = Reflect.get(newNetworkState, 'udp');
-          clearInterval(newUdp?.keepAliveInterval);
-        }
-        oldNetworking?.off('stateChange', networkStateChangeHandler);
-        newNetworking?.on('stateChange', networkStateChangeHandler);
-      }
-    });
+    // connection.configureNetworking();
+    // connection.on("stateChange", (oldState: VoiceConnectionState, newState: VoiceConnectionState) => {
+    //   if (this.statsChageTime <= Date.now()) {
+    //     this.statsChageTime = Date.now() + 10000;
+    //     connection.configureNetworking();
+    //     const oldNetworking = Reflect.get(oldState, 'networking');
+    //     const newNetworking = Reflect.get(newState, 'networking');
+    //     const networkStateChangeHandler = (_oldNetworkState: any, newNetworkState: any) => {
+    //       const newUdp = Reflect.get(newNetworkState, 'udp');
+    //       clearInterval(newUdp?.keepAliveInterval);
+    //     }
+    //     oldNetworking?.off('stateChange', networkStateChangeHandler);
+    //     newNetworking?.on('stateChange', networkStateChangeHandler);
+    //   }
+    // });
     return connection;
   }
 

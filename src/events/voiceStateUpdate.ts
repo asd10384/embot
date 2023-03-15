@@ -1,6 +1,6 @@
 import { getVoiceConnection } from '@discordjs/voice';
 import { ChannelType, VoiceState } from 'discord.js';
-import { client } from 'index';
+import { client } from '../index';
 import { QDB } from "../databases/Quickdb";
 
 export const voiceStateUpdate = (oldStats: VoiceState, newStats: VoiceState) => {
