@@ -110,7 +110,7 @@ export default class implements Command {
   }
 
   async setttsmove(guild: Guild, move: boolean | null): Promise<EmbedBuilder> {
-    const tdb = client.gettts(guild);
+    const tdb = client.getTts(guild);
     if (move === null) return client.mkembed({
       title: `현재 TTS 이동가능`,
       description: `**${tdb.move ? "활성화" : "비활성화"}**`

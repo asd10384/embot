@@ -20,7 +20,7 @@ export interface guildData {
   },
   autovc: {
     first: { channelID: string, categoryID: string, limit: number }[];
-    second: { id: string, userId: string }[];
+    // second: { id: string, userId: string }[];
   }
 }
 interface getguildData {
@@ -35,7 +35,7 @@ interface getguildData {
   };
   autovc?: {
     first: { channelID: string, categoryID: string, limit: number }[];
-    second: { id: string, userId: string }[];
+    // second: { id: string, userId: string }[];
   };
 }
 
@@ -82,7 +82,7 @@ const guild_get = (guild: Guild) => new Promise<guildData>(async (res, _rej) => 
     },
     autovc: {
       first: [],
-      second: []
+      // second: []
     }
   };
   await qdb.table("guild").set("s"+guild.id, data).catch(() => {});

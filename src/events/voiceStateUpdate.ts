@@ -28,10 +28,10 @@ async function join(newStats: VoiceState) {
       return undefined;
     });
     if (!channel) return;
-    GDB.autovc.second.push({
-      id: channel.id,
-      userId: id
-    });
+    client.setAutovcSecounds(newStats.guild.id, [
+      ...client.getAutovcSecounds(newStats.guild.id),
+      { id: channel.id, userId: id }
+    ]);
     await QDB.guild.set(newStats.guild!, { autovc: GDB.autovc }).then((val) => {
       if (val) newStats.member?.voice.setChannel(channel);
     }).catch(() => {});
@@ -39,12 +39,11 @@ async function join(newStats: VoiceState) {
 }
 async function leave(oldStats: VoiceState) {
   if (oldStats.channel?.members.size! < 1) {
-    const GDB = await QDB.guild.get(oldStats.guild);
-    if (GDB.autovc.second.some((autovcDB) => autovcDB.id === oldStats.channelId)) {
-      GDB.autovc.second.splice(GDB!.autovc.second.findIndex((autoDB) => autoDB.id === oldStats.channelId), 1);
-      await QDB.guild.set(oldStats.guild!, { autovc: GDB.autovc }).then((val) => {
-        if (val) oldStats.channel?.delete();
-      }).catch(() => {});
+    const cid = oldStats.channelId!;
+    const autovcSecounds = client.getAutovcSecounds(oldStats.guild.id);
+    if (autovcSecounds.some(v => v.id === cid)) {
+      oldStats.channel?.delete().catch(() => {});
+      client.setAutovcSecounds(oldStats.guild.id, autovcSecounds.filter(v => v.id !== cid));
     }
   }
 }

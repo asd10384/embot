@@ -29,7 +29,7 @@ export const onMessageCreate = async (message: Message) => {
     const GDB = await QDB.guild.get(message.guild!);
     if (GDB.tts.channelId === message.channelId) {
       if (GDB.tts.use) {
-        client.gettts(message.guild!).tts(message, message.content);
+        client.getTts(message.guild!).tts(message, message.content);
       }
     }
   }

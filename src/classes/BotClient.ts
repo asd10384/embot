@@ -9,6 +9,7 @@ export class BotClient extends Client {
   public prefix: string;
   public embedColor: ColorResolvable;
   public ttsClass: Map<string, TTS>;
+  public autovcSeconds: Map<string, { id: string; userId: string }[]>;
 
   public constructor() {
     super({ intents: Consts.CLIENT_INTENTS });
@@ -21,6 +22,7 @@ export class BotClient extends Client {
       : "Orange";
 
     this.ttsClass = new Map();
+    this.autovcSeconds = new Map();
     this.login(process.env.DISCORD_TOKEN);
   }
 
@@ -82,9 +84,19 @@ export class BotClient extends Client {
     return embed;
   }
 
-  gettts(guild: Guild): TTS {
+  getTts(guild: Guild): TTS {
     if (!this.ttsClass.has(guild.id)) this.ttsClass.set(guild.id, new TTS(guild));
     return this.ttsClass.get(guild.id)!;
+  }
+
+  getAutovcSecounds(guildId: string): { id: string; userId: string }[] {
+    if (!this.autovcSeconds.has(guildId)) this.autovcSeconds.set(guildId, []);
+    return this.autovcSeconds.get(guildId)!;
+  }
+
+  setAutovcSecounds(guildId: string, data: { id: string; userId: string; }[]): { id: string; userId: string }[] {
+    if (this.autovcSeconds.has(guildId)) this.autovcSeconds.set(guildId, data);
+    return data;
   }
 
   public help(name: string, metadata: ChatInputApplicationCommandData, msgmetadata?: { name: string, des: string }[]): EmbedBuilder | undefined {

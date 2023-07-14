@@ -2,7 +2,6 @@ import { client } from "../index";
 // import { check_permission as ckper, embed_permission as emper } from "../utils/Permission";
 import { Command } from "../interfaces/Command";
 import { GuildMember, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ChatInputApplicationCommandData, CommandInteraction, Message, Guild, TextChannel } from "discord.js";
-import { QDB } from "../databases/Quickdb";
 
 /**
  * DB
@@ -71,13 +70,8 @@ export default class implements Command {
   }
 
   async change(guild: Guild, member: GuildMember, changeChannelMemberSize: number): Promise<EmbedBuilder> {
-    const GDB = await QDB.guild.get(guild);
-    if (!GDB) return client.mkembed({
-      title: `데이터베이스를 찾을수없음`,
-      description: `다시시도해주세요.`,
-      color: "DarkRed"
-    });
-    if (!GDB.autovc.second.some((autovcDB) => autovcDB.userId === member.id)) return client.mkembed({
+    const autovcSecounds = client.getAutovcSecounds(guild.id);
+    if (!autovcSecounds.some(v => v.userId === member.id)) return client.mkembed({
       title: `자동음성채널을 찾을수없음`,
       description: `<@${member.id}> 님이 만드신 자동음성채널이 없습니다.`,
       color: "DarkRed"
@@ -87,7 +81,7 @@ export default class implements Command {
       : undefined;
     if (
       !voicechannel
-      || !GDB.autovc.second.some((autovcDB) => autovcDB.userId === member.id && autovcDB.id === voicechannel.id)
+      || !autovcSecounds.some(v => v.userId === member.id && v.id === voicechannel.id)
     ) return client.mkembed({
       title: `음성채널을 찾을수없음`,
       description: `제작한 자동음성채널의 음성에 들어간뒤 사용해주세요.`,
