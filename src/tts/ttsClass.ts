@@ -56,7 +56,8 @@ export const restartsignature = () => new Promise<string>(async (res, rej) => {
 
 export class TTS {
   guild: Guild;
-  ttstimer: NodeJS.Timeout | undefined;
+  ttsTimer: NodeJS.Timer;
+  ttsTimerTime: number;
   lasttts: number;
   setPlayerSubscription: PlayerSubscription | undefined;
   move: boolean;
@@ -65,12 +66,20 @@ export class TTS {
 
   constructor(guild: Guild) {
     this.guild = guild;
-    this.ttstimer = undefined;
     this.lasttts = 0;
     this.setPlayerSubscription = undefined;
     this.move = true;
     this.connection = undefined;
     this.statsChageTime = 0;
+    this.ttsTimerTime = -1;
+    this.ttsTimer = setInterval(() => {
+      if (this.ttsTimerTime != -1 && this.ttsTimerTime < Date.now()) {
+        this.ttsTimerTime = -1;
+        this.move = true;
+        getVoiceConnection(this.guild.id)?.disconnect();
+        getVoiceConnection(this.guild.id)?.destroy();
+      }
+    }, 5000);
   }
 
   setmove(getmove: boolean) {
@@ -141,7 +150,7 @@ export class TTS {
       return;
     }
 
-    if (this.ttstimer) clearTimeout(this.ttstimer);
+    this.ttsTimerTime = Date.now() + (TimerTime*1000);
 
     let randomfilename = Math.random().toString(36).replace(/0?\./g,"");
     while (true) {
@@ -164,12 +173,6 @@ export class TTS {
     this.connection = await this.getConnection(channel);
     if (!this.connection) return;
     
-    this.ttstimer = setTimeout(() => {
-      this.move = true;
-      getVoiceConnection(this.guild.id)?.disconnect();
-      getVoiceConnection(this.guild.id)?.destroy();
-    }, 1000 * TimerTime);
-
     try {
       this.setPlayerSubscription?.player.stop();
       const Player = createAudioPlayer();
