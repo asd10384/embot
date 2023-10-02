@@ -144,11 +144,9 @@ export class TTS {
       ]
     }).then(m => client.msgdelete(m, 1));
 
-    if (this.lasttts+addlasttts <= Date.now()) {
-      this.lasttts = Date.now();
-    } else {
-      return;
-    }
+    if (this.lasttts+addlasttts > Date.now()) return;
+    
+    this.lasttts = Date.now();
 
     this.ttsTimerTime = Date.now() + (TimerTime*1000);
 
