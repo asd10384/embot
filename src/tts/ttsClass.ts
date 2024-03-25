@@ -7,7 +7,7 @@ import { makefile, signaturesiteurl } from "./signature";
 import { getsignature } from "./signature";
 import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection, VoiceConnectionStatus } from "@discordjs/voice";
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
-import { TextToSpeechClient } from "@google-cloud/text-to-speech";
+import { textToSpeech, Voice } from "./chzzk";
 import { repalcelist, replaceobj, replacetext } from "./replaceMessage";
 import { TimerTime } from "./ttsConfig";
 import { Logger } from "../utils/Logger";
@@ -17,21 +17,8 @@ export const signaturefilepath: string = (process.env.SIGNATURE_FILE_PATH) ? (pr
 const replaceRegExp = new RegExp(repalcelist.join('|'), 'gi');
 const ttsfilelist = new Set<string>();
 const addlasttts = 150;
-
-const googlettsspeed = 1.105; // 트윕속도 : 0.905
-
-const ttsclient = new TextToSpeechClient({
-  keyFile: 'googlettsapi.json',
-  fallback: false
-});
-
-const fileformat: {
-  ttsformat: "AUDIO_ENCODING_UNSPECIFIED" | "LINEAR16" | "MP3" | "OGG_OPUS",
-  fileformat: "mp3" | "wav" | "ogg"
-} = {
-  ttsformat: 'MP3',
-  fileformat: 'mp3'
-};
+const fileformat = "mp3";
+const voice: Voice = "nyuna";
 
 export let snobj: { name: string[], url: string }[] = [];
 export let sncheckobj: { [key: string]: string } = {};
@@ -144,9 +131,11 @@ export class TTS {
       ]
     }).then(m => client.msgdelete(m, 1));
 
-    if (this.lasttts+addlasttts > Date.now()) return;
-    
-    this.lasttts = Date.now();
+    if (this.lasttts+addlasttts <= Date.now()) {
+      this.lasttts = Date.now();
+    } else {
+      return;
+    }
 
     this.ttsTimerTime = Date.now() + (TimerTime*1000);
 
@@ -192,7 +181,7 @@ export class TTS {
     }
     setTimeout(() => {
       try {
-        unlink(`${ttsfilepath}/${filename}.${fileformat.fileformat}`, (err) => {
+        unlink(`${ttsfilepath}/${filename}.${fileformat}`, (err) => {
           if (ttsfilelist.has(filename)) ttsfilelist.delete(filename);
           if (err) return;
         });
@@ -322,13 +311,13 @@ export class TTS {
           if (getbuf) {
             buf = Buffer.from(getbuf);
           } else {
-            buf = await this.gettext(list[i]).catch(() => {
+            buf = await textToSpeech(list[i], voice).catch(() => {
               return undefined;
             });
           }
         } else {
           list[i] = this.replacemsg(list[i]);
-          buf = await this.gettext(list[i]).catch(() => {
+          buf = await textToSpeech(list[i], voice).catch(() => {
             return undefined;
           });
         }
@@ -342,44 +331,18 @@ export class TTS {
         return;
       }
     } else {
-      output = await this.gettext(text).catch(() => {
+      output = await textToSpeech(text, voice).catch(() => {
         return undefined;
       });
       if (!output) return;
     }
-    let filename: string | undefined = `${ttsfilepath}/${fileURL}.${fileformat.fileformat}`;
+    let filename: string | undefined = `${ttsfilepath}/${fileURL}.${fileformat}`;
     try {
       writeFileSync(filename, output);
     } catch (err) {
       filename = undefined;
     }
     return filename;
-  }
-
-  async gettext(text: string) {
-    let response: any = undefined;
-    try {
-      response = await ttsclient.synthesizeSpeech({
-        input: { text: text },
-        voice: {
-          languageCode: 'ko-KR',
-          name: 'ko-KR-Standard-A' // ko-KR-Neural2-A
-        },
-        audioConfig: {
-          audioEncoding: fileformat.ttsformat, // 형식
-          speakingRate: googlettsspeed, // 속도 0.905
-          pitch: 0, // 피치
-          // sampleRateHertz: 16000, // 헤르츠
-          // effectsProfileId: ['medium-bluetooth-speaker-class-device'] // 효과 https://cloud.google.com/text-to-speech/docs/audio-profiles
-        }
-      }).catch(() => {
-        return undefined;
-      });
-      if (!response || !response[0] || !response[0].audioContent) return undefined;
-      return response[0].audioContent;
-    } catch {
-      return undefined;
-    }
   }
 
   replacemsg(text: string) {

@@ -21,10 +21,9 @@ json.sqlite
 
 dist/
 
-googlettsapi.json
-
 sounds/
 
+test/
 test*.ts
 
 *.sqlite

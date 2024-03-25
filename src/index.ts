@@ -1,7 +1,6 @@
 import { BotClient } from "./classes/BotClient";
 import { SlashHandler } from "./classes/Handler";
 
-import "./tts/googleTTSAPI";
 import { onReady } from "./events/onReady";
 import { onInteractionCreate } from "./events/onInteractionCreate";
 import { onMessageCreate } from "./events/onMessageCreate";
