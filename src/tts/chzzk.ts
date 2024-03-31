@@ -1,7 +1,7 @@
 import "dotenv/config";
 import axios from "axios";
 
-export type Voice = "nyuna";
+export type Voice = "nyuna" | "ngaram" | "nhajun" | "nmeow" | "nkyungtae";
 
 const Cookie = {
   NID_AUT: process.env.CHZZK_NID_AUT?.trim() || "",
