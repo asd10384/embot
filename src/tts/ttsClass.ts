@@ -277,6 +277,7 @@ export class TTS {
   async mktts(fileURL: string, text: string): Promise<string | undefined> {
     const scobj: any = sncheckobj;
     let list: any;
+    let list: any[];
     let buf: any;
     let output: any;
     text = text.replace(sncheck, (text) => {
@@ -286,6 +287,7 @@ export class TTS {
     var checkerr = false;
     if (list.length > 0) {
       for (let i in list) {
+        if (list[i] == undefined || list[i] === '') continue;
         if (snlist.includes(list[i])) {
           var getbuf: Buffer | undefined = undefined;
           try {
@@ -325,6 +327,7 @@ export class TTS {
         list[i] = buf;
       }
       if (checkerr) return;
+      list = list.filter(v => !!v);
       try {
         output = Buffer.concat(list);
       } catch(err) {
