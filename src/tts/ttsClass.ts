@@ -31,7 +31,9 @@ export const restartsignature = () => new Promise<string>(async (res, rej) => {
     snobj = sig[0];
     sncheckobj = sig[1];
     snlist = Object.keys(sncheckobj);
-    sncheck = new RegExp(Object.keys(sncheckobj).join('|'), 'gi');
+    sncheck = new RegExp(Object.keys(sncheckobj).map(v => v.replace(/\`|\~|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\=|\+|\[|\{|\]|\}|\\|\||\;|\:|\'|\"|\,|\<|\.|\>|\/|\?/g, (text) => {
+      return '\\'+text;
+    })).join('|'), 'gi');
     const getlog = await makefile(sig[0]);
     Logger.log(getlog);
     return res(getlog);
@@ -276,7 +278,6 @@ export class TTS {
 
   async mktts(fileURL: string, text: string): Promise<string | undefined> {
     const scobj: any = sncheckobj;
-    let list: any;
     let list: any[];
     let buf: any;
     let output: any;
