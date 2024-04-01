@@ -7,7 +7,7 @@ import { makefile, signaturesiteurl } from "./signature";
 import { getsignature } from "./signature";
 import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection, VoiceConnectionStatus } from "@discordjs/voice";
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
-import { textToSpeech, Voice } from "./chzzk";
+import { textToSpeech, Voice } from "./api/chzzk";
 import { repalcelist, replaceobj, replacetext } from "./replaceMessage";
 import { TimerTime } from "./ttsConfig";
 import { Logger } from "../utils/Logger";
