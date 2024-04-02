@@ -7,7 +7,7 @@ import { makefile, signaturesiteurl } from "./signature";
 import { getsignature } from "./signature";
 import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel, PlayerSubscription, VoiceConnection, VoiceConnectionStatus } from "@discordjs/voice";
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
-import { textToSpeech, Voice } from "./api/chzzk";
+import { textToSpeech } from "./api/google";
 import { repalcelist, replaceobj, replacetext } from "./replaceMessage";
 import { TimerTime } from "./ttsConfig";
 import { Logger } from "../utils/Logger";
@@ -18,7 +18,6 @@ const replaceRegExp = new RegExp(repalcelist.join('|'), 'gi');
 const ttsfilelist = new Set<string>();
 const addlasttts = 150;
 const fileformat = "mp3";
-const voice: Voice = "nyuna";
 
 export let snobj: { name: string[], url: string }[] = [];
 export let sncheckobj: { [key: string]: string } = {};
@@ -314,13 +313,13 @@ export class TTS {
           if (getbuf) {
             buf = Buffer.from(getbuf);
           } else {
-            buf = await textToSpeech(list[i], voice).catch(() => {
+            buf = await textToSpeech(list[i]).catch(() => {
               return undefined;
             });
           }
         } else {
           list[i] = this.replacemsg(list[i]);
-          buf = await textToSpeech(list[i], voice).catch(() => {
+          buf = await textToSpeech(list[i]).catch(() => {
             return undefined;
           });
         }
@@ -335,7 +334,7 @@ export class TTS {
         return;
       }
     } else {
-      output = await textToSpeech(text, voice).catch(() => {
+      output = await textToSpeech(text).catch(() => {
         return undefined;
       });
       if (!output) return;
